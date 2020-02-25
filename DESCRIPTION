@@ -19,6 +19,7 @@ Description: Fit sparse and full Gaussian processes with Type-II
   Garton et al. (2020).
 Imports: 
     glmnet,
+    ggplot2,
     Matrix,
     mvtnorm,
     Rcpp
