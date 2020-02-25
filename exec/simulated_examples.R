@@ -40,7 +40,7 @@ system.time(spike_model <- optimize_gp(cov_par_start = cov_par_start,
                                                            TTmax = maxknot,
                                                            maxit = 1000,
                                                            TTmin = 10),
-                                                verbose = TRUE, file_path = NULL)
+                                                verbose = FALSE, file_path = NULL)
 )
 
 ## get predictions and plot the top panel from figure 1
@@ -140,7 +140,7 @@ t_oat_vi1 <- system.time(oat_vi1 <- optimize_gp(cov_par_start = cov_par_start,
                                                               epsilon = 1e-4,
                                                               TTmax = maxknot,
                                                               TTmin = 10),
-                                                   verbose = TRUE, file_path = NULL)
+                                                   verbose = FALSE, file_path = NULL)
 )
 
 ## OAT VI 2
@@ -162,7 +162,7 @@ t_oat_vi2 <- system.time(oat_vi2 <- optimize_gp(cov_par_start = cov_par_start,
                                                            "epsilon" = 1e-4,
                                                            "TTmax" = maxknot,
                                                            "TTmin" = 10),
-                                                verbose = TRUE, file_path = NULL)
+                                                verbose = FALSE, file_path = NULL)
 )
 
 ## OAT VI 3
@@ -183,7 +183,7 @@ t_oat_vi3 <- system.time(oat_vi3 <- optimize_gp(cov_par_start = cov_par_start,
                                                            obj_tol = 1e-3,
                                                            "TTmax" = maxknot,
                                                            "TTmin" = 10),
-                                                verbose = TRUE, file_path = NULL)
+                                                verbose = FALSE, file_path = NULL)
 )
 
 ## Simultaneous optimizations using the knot locations found by OAT
@@ -198,7 +198,7 @@ t_simult_vi1 <- system.time(simult_vi1 <- optimize_gp(y = y, xy = xy,
                                                         xu_opt = "simultaneous", nugget = TRUE,
                                                         opt = list("epsilon" = 1e-4,
                                                                    obj_tol = 1e-3),
-                                                        verbose = TRUE, file_path = NULL))
+                                                        verbose = FALSE, file_path = NULL))
 
 ## Simultaneous optimizations using the knot locations found by OAT
 xu_simult2 <- oat_vi2$results$xu
@@ -212,8 +212,7 @@ t_simult_vi2 <- system.time(simult_vi2 <- optimize_gp(y = y, xy = xy,
                                                       xu_opt = "simultaneous", nugget = TRUE,
                                                       opt = list("epsilon" = 1e-4,
                                                                  obj_tol = 1e-3),
-                                                      verbose = TRUE, file_path = NULL))
-simult_vi2 <- readRDS(fp_simult_vi2)
+                                                      verbose = FALSE, file_path = NULL))
 
 
 ## Simultaneous optimizations using the knot locations found by OAT
@@ -228,8 +227,7 @@ t_simult_vi3 <- system.time(simult_vi3 <- optimize_gp(y = y, xy = xy,
                                                       xu_opt = "simultaneous", nugget = TRUE,
                                                       opt = list("epsilon" = 1e-4,
                                                                  obj_tol = 1e-3),
-                                                      verbose = TRUE, file_path = NULL))
-simult_vi3 <- readRDS(fp_simult_vi3)
+                                                      verbose = FALSE, file_path = NULL))
 
 ## get predictions from each model
 pred_oat1 <- predict_gp(mod = oat_vi1, 
