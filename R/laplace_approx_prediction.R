@@ -1,5 +1,5 @@
 ## Functions to do prediction using the Laplace approximation
-
+#'@export
 predict_laplace <- function(u_mean,
                             u_var,
                             xu,
@@ -124,6 +124,7 @@ predict_laplace <- function(u_mean,
 
 
 ## Full GP predictions from Laplace approximation
+#'@export
 predict_laplace_full <- function(ff,
                                  xy,
                                  x_pred,
@@ -276,6 +277,7 @@ predict_laplace_full <- function(ff,
 # }
 
 ## predictions for full GP with Gaussian data
+#'@export
 predict_gp_full <- function(xy,
                             y,
                             x_pred,
@@ -403,7 +405,6 @@ predict_gp_full <- function(xy,
 #'       data this is the logistic function. In the case of Poisson data
 #'       this is m*exp(f(x)).
 #' @export
-#'
 predict_gp <- function(mod, x_pred, mu_pred = NA, full_cov, vi = FALSE)
 {
   ## mod is the object returned by a parameter estimation/knot selection function
@@ -541,6 +542,7 @@ predict_gp <- function(mod, x_pred, mu_pred = NA, full_cov, vi = FALSE)
 }
 
 ## subset of regressors / projected process prediction
+#'@export
 predict_sor <- function(u_mean,
                             u_var,
                             xu,

@@ -1,12 +1,14 @@
 # Evaluation and assessment functions
 
 ## rmse function to true GP
+#'@export
 my_rmse <- function(pred, actual)
 {
   return(sqrt(mean((pred - actual)^2)))
 }
 
 ## negative log probability function
+#'@export
 my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE, mv = FALSE)
 {
   if(family == "gaussian")
@@ -18,7 +20,7 @@ my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE,
     }
     if(mv == TRUE)
     {
-      nlp <- -mvtnorm::dmvnorm(x = y, mean = pred_mean, 
+      nlp <- -mvtnorm::dmvnorm(x = y, mean = pred_mean,
                                sigma = pred_var + tau^2 * diag(nrow(pred_mean)),
                                log = TRUE)
     }
@@ -40,17 +42,17 @@ my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE,
     if(mv == FALSE & mc == FALSE)
     {
       nlp <- numeric()
-      
+
       for(i in 1:length(y))
       {
-          nlp[i] <- -log(integrate(f = g, lower = -Inf, upper = Inf, 
+          nlp[i] <- -log(integrate(f = g, lower = -Inf, upper = Inf,
                             y = y[i], pred_mean = as.numeric(pred_mean)[i],
                             pred_var = pred_var[i], par = par)$value)
-      } 
+      }
     }
     if(mv == FALSE & mc == TRUE)
     {
-      
+
       nlp <- numeric()
       mcsd <- numeric()
       for(i in 1:length(y))
@@ -59,7 +61,7 @@ my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE,
         ll <- dbinom(x = y[i], size = 1, prob = my_logistic(x = ffsim), log = FALSE)
         nlp[i] <- -log(mean(ll))
         mcsd[i] <- sd(ll)
-      } 
+      }
     }
     if(mv == TRUE)
     {
@@ -92,21 +94,21 @@ my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE,
         ll * dnorm(x = ff, mean = pred_mean, sd = sqrt(pred_var), log = FALSE)
       )
     }
-    
+
     if(mc == FALSE & mv == FALSE)
     {
       # nlp <- -log(integrate(f = g, lower = -Inf, upper = Inf,
       #                       y = y, pred_mean = pred_mean, pred_var = pred_var, par = par)$value)
       nlp <- numeric()
-      
+
       for(i in 1:length(y))
       {
-        nlp[i] <- -log(integrate(f = g, lower = -Inf, upper = Inf, 
+        nlp[i] <- -log(integrate(f = g, lower = -Inf, upper = Inf,
                                  y = y[i], pred_mean = as.numeric(pred_mean)[i],
                                  pred_var = pred_var[i], par = par)$value)
-      } 
+      }
     }
-    
+
     if(mc == TRUE & mv == FALSE)
     {
       return("Error: Monte Carlo estimate of marginal NLP for Poisson data must be fixed.")
@@ -130,7 +132,7 @@ my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE,
       mcsd <- sd(ll)
     }
   }
-  
+
   if(mc == FALSE)
   {
     return(list("nlp" = nlp))
@@ -143,8 +145,9 @@ my_nlp <- function(y, pred_mean, pred_var, family = "gaussian", par, mc = FALSE,
 }
 
 
-## function calculate the KL divergence between two Multivariate Gaussians wrt 
+## function calculate the KL divergence between two Multivariate Gaussians wrt
 ##    the first density
+#'@export
 my_kl <- function(mean1, mean2, sigma1, sigma2, mv = FALSE)
 {
   if(mv == TRUE)
@@ -153,8 +156,8 @@ my_kl <- function(mean1, mean2, sigma1, sigma2, mv = FALSE)
     chol2 <- t(chol(x = sigma2))
     return(
       (1/2) * (
-        sum(diag(solve(a = sigma2, b = sigma1))) + t(mean2 - mean1) %*% 
-          solve(a = sigma2, b = mean2 - mean1) - length(mean1) + 
+        sum(diag(solve(a = sigma2, b = sigma1))) + t(mean2 - mean1) %*%
+          solve(a = sigma2, b = mean2 - mean1) - length(mean1) +
           sum(log(diag(chol2))) - sum(log(diag(chol1)))
       )
     )
@@ -163,18 +166,19 @@ my_kl <- function(mean1, mean2, sigma1, sigma2, mv = FALSE)
   {
     return(
       (1/2) * (
-        sum(sigma1 / sigma2) + t(mean2 - mean1) %*% 
-          ( diag((1/sigma2 )) %*% (mean2 - mean1)) - length(mean1) + 
+        sum(sigma1 / sigma2) + t(mean2 - mean1) %*%
+          ( diag((1/sigma2 )) %*% (mean2 - mean1)) - length(mean1) +
           sum(log(sigma2)) - sum(log(sigma1))
       )
     )
   }
-  
+
 }
 
 ## function to take data, and results from predict_laplace, and produce a graph
-pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "Predictions", 
-                          family = "gaussian", alpha = 0.2, sparse = FALSE, size = 0.2, 
+#'@export
+pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "Predictions",
+                          family = "gaussian", alpha = 0.2, sparse = FALSE, size = 0.2,
                           xlabel = "x", ylabel = "y", samples = FALSE, ...)
 {
   if(samples == FALSE)
@@ -182,7 +186,7 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
     quant <- qnorm(p = 1 - (1 - ci_level)/2, mean = 0, sd = 1)
     lb <- pred_results$pred_mean - quant * sqrt(pred_results$pred_var)
     ub <- pred_results$pred_mean + quant * sqrt(pred_results$pred_var)
-    
+
     if(family == "gaussian")
     {
       pred_mean <- pred_results$pred_mean
@@ -198,29 +202,29 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
   }
   if(samples == TRUE)
   {
-    lb <- apply(X = pred_results$pred_samples, MARGIN = 2, 
+    lb <- apply(X = pred_results$pred_samples, MARGIN = 2,
                 FUN = quantile, probs = (1 - ci_level)/2)
-    ub <- apply(X = pred_results$pred_samples, MARGIN = 2, 
+    ub <- apply(X = pred_results$pred_samples, MARGIN = 2,
                 FUN = quantile, probs = 1 - (1 - ci_level)/2)
-    
+
     if(family == "gaussian")
     {
-      pred_mean <- apply(X = pred_results$pred_samples, MARGIN = 2, 
+      pred_mean <- apply(X = pred_results$pred_samples, MARGIN = 2,
                          FUN = mean)
     }
     if(family == "bernoulli")
     {
-      pred_mean <- apply(X = my_logistic(pred_results$pred_samples), MARGIN = 2, 
+      pred_mean <- apply(X = my_logistic(pred_results$pred_samples), MARGIN = 2,
                          FUN = mean)
     }
     if(family == "poisson")
     {
-      pred_mean <- apply(X = exp(pred_results$pred_samples), MARGIN = 2, 
+      pred_mean <- apply(X = exp(pred_results$pred_samples), MARGIN = 2,
                          FUN = mean)
     }
-    
+
   }
-  
+
   if(sparse == TRUE)
   {
     if(family == "gaussian")
@@ -230,11 +234,11 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
       mymax <- max(c(y, ub), na.rm = TRUE)
       small_int_y <- 2 * (mymax - mymin) / 100
       small_int_x <- (max(xy) - min(xy)) / 100
-      
-      myplot <- ggplot() + 
+
+      myplot <- ggplot() +
         geom_point(mapping = aes(x = xy, y = y), size = size) +
         geom_line(mapping = aes(x = xy, y = pred_mean), colour = "blue", linetype = "dashed") +
-        geom_ribbon(mapping = aes(x = xy, 
+        geom_ribbon(mapping = aes(x = xy,
                                   ymin = lb,
                                   ymax = ub),
                     fill = "blue", alpha = alpha) +
@@ -256,17 +260,17 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
     {
       args <- list(...)
       m <- args$m
-      
+
       quant <- qnorm(p = 1 - (1 - ci_level)/2, mean = 0, sd = 1)
       mymin <- min(c(y, exp(lb) * m ), na.rm = TRUE)
       mymax <- max(c(y, exp(ub) * m ), na.rm = TRUE)
       small_int_y <- 2 * (mymax - mymin) / 100
       small_int_x <- (max(xy) - min(xy)) / 100
-      
-      myplot <- ggplot() + 
+
+      myplot <- ggplot() +
         geom_point(mapping = aes(x = xy, y = y), size = size) +
         geom_line(mapping = aes(x = xy, y = pred_mean * m), colour = "blue", linetype = "dashed") +
-        geom_ribbon(mapping = aes(x = xy, 
+        geom_ribbon(mapping = aes(x = xy,
                                   ymin = exp(lb) * m,
                                   ymax = exp(ub) * m), fill = "blue", alpha = alpha) +
         # geom_line(mapping = aes(x = xy, y = exp(lb) * m ), colour = "blue", linetype = 2) +
@@ -283,7 +287,7 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
                                    y = mymax, yend = mymax) , col = "red") +
         ggtitle(title)
     }
-    
+
     if(family == "bernoulli")
     {
       my_logistic <- function(x)
@@ -291,17 +295,17 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
         return(1 / (1 + exp(-x)))
       }
       args <- list(...)
-      
+
       quant <- qnorm(p = 1 - (1 - ci_level)/2, mean = 0, sd = 1)
       mymin <- min(c(y, my_logistic(lb)), na.rm = TRUE)
       mymax <- max(c(y, my_logistic(ub)), na.rm = TRUE) + 0.025
       small_int_y <- 2 * (mymax - mymin) / 100
       small_int_x <- (max(xy) - min(xy)) / 100
-      
-      myplot <- ggplot() + 
+
+      myplot <- ggplot() +
         geom_point(mapping = aes(x = xy, y = y), size = size) +
         geom_line(mapping = aes(x = xy, y = pred_mean), colour = "blue", linetype = "dashed") +
-        geom_ribbon(mapping = aes(x = xy, 
+        geom_ribbon(mapping = aes(x = xy,
                                   ymin = my_logistic(lb),
                                   ymax = my_logistic(ub)), fill = "blue", alpha = alpha) +
         # geom_line(mapping = aes(x = xy, y = my_logistic(lb) * m ), colour = "blue", linetype = 2) +
@@ -319,7 +323,7 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
         ggtitle(title)
     }
   }
-  
+
   if(sparse == FALSE)
   {
     if(family == "gaussian")
@@ -329,11 +333,11 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
       mymax <- max(c(y, ub), na.rm = TRUE)
       small_int_y <- 2 * ((mymax - mymin) / 100)
       small_int_x <- (max(xy) - min(xy)) / 100
-      
-      myplot <- ggplot() + 
+
+      myplot <- ggplot() +
         geom_point(mapping = aes(x = xy, y = y), size = size) +
         geom_line(mapping = aes(x = xy, y = pred_mean), colour = "blue", linetype = "dashed") +
-        geom_ribbon(mapping = aes(x = xy, 
+        geom_ribbon(mapping = aes(x = xy,
                                   ymin = lb,
                                   ymax = ub),
                     fill = "blue", alpha = alpha) +
@@ -347,17 +351,17 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
     {
       args <- list(...)
       m <- args$m
-      
+
       quant <- qnorm(p = 1 - (1 - ci_level)/2, mean = 0, sd = 1)
       mymin <- min(c(y, exp(lb) * m ), na.rm = TRUE)
       mymax <- max(c(y, exp(ub) * m ), na.rm = TRUE)
       small_int_y <- 2 * (mymax - mymin) / 100
       small_int_x <- (max(xy) - min(xy)) / 100
-      
-      myplot <- ggplot() + 
+
+      myplot <- ggplot() +
         geom_point(mapping = aes(x = xy, y = y), size = size) +
         geom_line(mapping = aes(x = xy, y = pred_mean * m), colour = "blue", linetype = "dashed") +
-        geom_ribbon(mapping = aes(x = xy, 
+        geom_ribbon(mapping = aes(x = xy,
                                   ymin = exp(lb) * m,
                                   ymax = exp(ub) * m), fill = "blue", alpha = alpha) +
         # geom_line(mapping = aes(x = xy, y = exp(lb) * m ), colour = "blue", linetype = 2) +
@@ -366,7 +370,7 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
         ylab(ylabel) +
         ggtitle(title)
     }
-    
+
     if(family == "bernoulli")
     {
       my_logistic <- function(x)
@@ -374,17 +378,17 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
         return(1 / (1 + exp(-x)))
       }
       args <- list(...)
-      
+
       quant <- qnorm(p = 1 - (1 - ci_level)/2, mean = 0, sd = 1)
       mymin <- min(c(y, my_logistic(lb)), na.rm = TRUE)
       mymax <- max(c(y, my_logistic(ub)), na.rm = TRUE)
       small_int_y <- 2 * (mymax - mymin) / 100
       small_int_x <- (max(xy) - min(xy)) / 100
-      
-      myplot <- ggplot() + 
+
+      myplot <- ggplot() +
         geom_point(mapping = aes(x = xy, y = y), size = size) +
         geom_line(mapping = aes(x = xy, y = pred_mean), colour = "blue", linetype = "dashed") +
-        geom_ribbon(mapping = aes(x = xy, 
+        geom_ribbon(mapping = aes(x = xy,
                                   ymin = my_logistic(lb),
                                   ymax = my_logistic(ub)), fill = "blue", alpha = alpha) +
         # geom_line(mapping = aes(x = xy, y = my_logistic(lb) * m ), colour = "blue", linetype = 2) +
@@ -394,13 +398,14 @@ pred_plot_fun <- function(y, xy, xu, xu_init, pred_results, ci_level, title = "P
         ggtitle(title)
     }
   }
-  
-  
+
+
   return(myplot)
-  
+
 }
 
 ## function to take data and prediction results and create a nice data frame ready for plotting
+#'@export
 data_to_plot_df <- function(data, pred, pred_type, ci = c(0.025,0.975))
 {
   plot_df <- data[data$train == FALSE,]
@@ -408,20 +413,20 @@ data_to_plot_df <- function(data, pred, pred_type, ci = c(0.025,0.975))
   plot_df$estimate <- pred$pred$pred_mean
   # plot_df$pred_var <- pred$pred$pred_var
   plot_df$estimate_type <- rep("link", times = nrow(plot_df))
-  
+
   plot_df_response <- data[data$train == FALSE,]
   plot_df_response$estimate <- pred$inverse_link(pred$pred$pred_mean)
   plot_df_response$estimate_type <- rep("response", times = nrow(plot_df_response))
-  
+
   plot_df_lower <- data[data$train == FALSE,]
   plot_df_lower$estimate <- pred$inverse_link(pred$pred$pred_mean + qnorm(p = ci[1], mean = 0, sd = 1) * pred$pred$pred_var)
   plot_df_lower$estimate_type <- rep("lower_response", times = nrow(plot_df_response))
-  
+
   plot_df_upper <- data[data$train == FALSE,]
   plot_df_upper$estimate <- pred$inverse_link(pred$pred$pred_mean + qnorm(p = ci[2], mean = 0, sd = 1) * pred$pred$pred_var)
   plot_df_upper$estimate_type <- rep("upper_response", times = nrow(plot_df_response))
-  
-  
+
+
   # plot_df$pred_response <- pred$inverse_link(pred$pred$pred_mean)
   # plot_df$lower <- pred$inverse_link(pred$pred$pred_mean + qnorm(p = ci[1], mean = 0, sd = 1) * pred$pred$pred_var)
   # plot_df$upper <- pred$inverse_link(pred$pred$pred_mean + qnorm(p = ci[2], mean = 0, sd = 1) * pred$pred$pred_var)
@@ -430,5 +435,5 @@ data_to_plot_df <- function(data, pred, pred_type, ci = c(0.025,0.975))
   plot_df_final$type <- as.factor(plot_df_final$type)
   plot_df_final$estimate_type <- as.factor(plot_df_final$estimate_type)
   return(plot_df_final)
-  
+
 }
