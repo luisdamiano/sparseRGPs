@@ -26,7 +26,7 @@ my_scale <- function(x, mean_vec, sd_vec)
 
 ## set percentage training data and number of runs
 ptrain <- 0.8
-runs <- 2
+runs <- 5
 
 ## vectors specifying model options
 xu_opt <- c("NA", "oat", "random", "oat", "simultaneous", "simultaneous")
@@ -42,13 +42,13 @@ kl <- numeric()
 srmse <- numeric()
 
 ## optimization parameters
-maxit = 3
+maxit = 1000
 obj_tol = 1e-3
 grad_tol = Inf
 delta = 1e-6
 epsilon <- 1e-4
 k_init <- 5
-maxknot <- 14
+maxknot <- 80
 TTmax <- maxknot / 2
 TTmin <- 5
 
