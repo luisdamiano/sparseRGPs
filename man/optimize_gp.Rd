@@ -2,8 +2,7 @@
 % Please edit documentation in R/optimize_gp.R
 \name{optimize_gp}
 \alias{optimize_gp}
-\title{Train a GP via type-II maximum likelihood. Optimization is done using
-Adadelta (Zeiler, 2012).}
+\title{Train a GP via type-II maximum likelihood.}
 \usage{
 optimize_gp(
   y,
@@ -129,8 +128,55 @@ is a part of the mean of the Poisson where E(Y) = m*exp(f(x)) and f(x)
 is the value of the latent GP at x.}
 }
 \value{
-Returns a list of values corresponding to the fitted GP.
+Returns a list of values corresponding to the fitted GP. These include:
+
+    sparse: logical value indicating whether the model is sparse or not
+
+    family: Character string indicating the conditional distribution of the
+    data given the latent function
+
+    delta: A number corresponding to the value of delta used in the fitted
+    model to stabilize relevant matrix operations.
+
+    xu_init: A matrix of initial knot values in the case that a
+    sparse model was fit.
+
+    results: A list with the following elements:
+
+        results$cov_par: A named list with the fitted covariance parameter values
+
+        results$cov_fun: Character string indicating the covariance function.
+
+        results$xu: The fitted, final knot locations
+
+        results$obj_fun: A vector of objective function values for every gradient
+        ascent step if OAT is not used, or the optimized objective
+        function after adding each knot if OAT is used.
+
+         results$u_mean: The posterior mean of the latent function at the knots.
+
+         results$u_var: The posterior variance-covariance matrix of the
+         latent function values at the knots.
+
+         results$muu: The marginal mean of the latent function at the knots.
+
+         results$mu: The marginal mean of the latent function at the observed
+         data locations
+
+         results$cov_par_history: Either the covariance parameter values at
+         every gradient ascent step if OAT is not used, or the optimized
+         covariance parameter values after adding each knot if OAT
+         is used.
+
+         results$ga_steps: A vector giving the number of gradient ascent steps,
+         potentially for every added knot if OAT is used.
+
+         results$u_post: a list where each element is a list showing the posterior
+         mean and variance-covariance matrix of the
+         latent function at the knots after adding each knot
 }
 \description{
 Train a full or sparse GP via type-II maximum likelihood.
+Optimization is done using
+Adadelta (Zeiler, 2012).
 }

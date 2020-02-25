@@ -10,6 +10,7 @@
 #' @param Sigma22 Variance covariance matrix at the knots.
 #' @param delta A small diagonal perturbation to Sigma22 for numerical stability.
 #' @return The value of the trace term in the ELBO.
+#' @export
 trace_term_fun <- function(cov_par, Sigma12, Sigma22, delta)
 {
   tau <- cov_par$tau
@@ -33,6 +34,7 @@ trace_term_fun <- function(cov_par, Sigma12, Sigma22, delta)
 #' @param cov_par A named list of covariance parameters.
 #' @param trace_term Scalar value of the current trace term in the ELBO.
 #' @return The derivative of the trace term with respect to the nugget/noise.
+#' @export
 dtrace_term_dtau <- function(cov_par, trace_term)
 {
   ## note that this is the derivative wrt log tau
@@ -48,6 +50,7 @@ dtrace_term_dtau <- function(cov_par, trace_term)
 #' @param cov_par A named list of covariance parameters.
 #' @param A_trace A value calculated internally in the ELBO gradient function.
 #' @return The derivative of the trace term with respect to the nugget/noise.
+#' @export
 dtrace_term_dcov_par <- function(cov_par, A_trace)
 {
   tau <- cov_par$tau
@@ -57,6 +60,7 @@ dtrace_term_dcov_par <- function(cov_par, A_trace)
 }
 
 ## compute the elbo
+#' @export
 elbo_fun <- function(ff = NA, mu, Z, Sigma12,
                      Sigma22, y,
                      trace_term_fun = trace_term_fun,
@@ -118,6 +122,7 @@ elbo_fun <- function(ff = NA, mu, Z, Sigma12,
 
 
 ## gradient of the ELBO wrt covariance parameters
+#' @export
 delbo_dcov_par <- function(cov_par,
                                cov_fun,
                                dcov_fun_dtheta,
@@ -597,6 +602,7 @@ delbo_dcov_par <- function(cov_par,
 }
 
 ## Gradient Ascent with the ELBO
+#' @export
 norm_grad_ascent_vi <- function(cov_par_start,
                                  cov_fun,
                                  dcov_fun_dtheta,
@@ -1211,6 +1217,7 @@ norm_grad_ascent_vi <- function(cov_par_start,
 }
 
 ## predict with the VI model
+#' @export
 predict_vi <- function(u_mean,
                         u_var,
                         xu,
@@ -1328,6 +1335,7 @@ predict_vi <- function(u_mean,
 }
 
 ## OAT with the VI model
+#' @export
 oat_knot_selection_norm_vi <- function(cov_par_start,
                                     cov_fun,
                                     dcov_fun_dtheta,
@@ -1558,6 +1566,7 @@ oat_knot_selection_norm_vi <- function(cov_par_start,
 
 ## variational inference knot proposal functions
 ## knot prop EGO
+#' @export
 knot_prop_ego_norm_vi <- function(norm_opt,
                                # obj_fun,
                                # grad_loglik_fn,
@@ -2070,6 +2079,7 @@ knot_prop_ego_norm_vi <- function(norm_opt,
 }
 
 ## Knot proposal based on a random subset of data locations
+#' @export
 knot_prop_random_norm_vi <- function(norm_opt,
                                   # obj_fun,
                                   # grad_loglik_fn,

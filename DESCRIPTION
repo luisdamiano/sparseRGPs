@@ -12,7 +12,8 @@ Description: Fit sparse and full Gaussian processes with Type-II
   non-Gaussian case also use the Gaussian posterior approximation 
   implied by the Laplace approximation. In the Gaussian data case, 
   there is an option to use the variational approximation proposed by 
-  Titsias (2009). In the case that sparse models are used, 
+  Titsias (2009). Otherwise, FI(T)C models are fit.
+  In the case that sparse models are used, 
   knots can be held fixed, 
   simultaneously optimized alongside covariance parameters, or 
   optimized using the OAT knot selection algorithm proposed in 
