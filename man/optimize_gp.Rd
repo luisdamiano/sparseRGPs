@@ -128,6 +128,9 @@ specify the variable m, which is a vector of length equal to y. This
 is a part of the mean of the Poisson where E(Y) = m*exp(f(x)) and f(x)
 is the value of the latent GP at x.}
 }
+\value{
+Returns a list of values corresponding to the fitted GP.
+}
 \description{
 Train a full or sparse GP via type-II maximum likelihood.
 }

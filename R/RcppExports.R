@@ -73,10 +73,46 @@ cov_fun_expC <- function(x1, x2, cov_par) {
     .Call('_sparseRGPs_cov_fun_expC', PACKAGE = 'sparseRGPs', x1, x2, cov_par)
 }
 
+#' Make a covariance matrix with  covariance function
+#'
+#' @param x Matrix of observed data values
+#' @param x_pred Potentially an empty matrix. If not empty, this returns
+#' the covariance between x and x_pred.
+#' @param cov_par Named list of covariance parameters. Need
+#' "sigma", "tau", and "l1", ..., "ld" where d is the input dimension
+#' @param cov_fun A character string specifying the covariance function.
+#' Currently only works with "sqexp".
+#' @param delta Scalar value that functions as a fixed nugget used to
+#' stabilize matrix inverses and decompositions.
+#' @return Covariance matrix at the observed data locations if
+#' x_pred = matrix(), or the covariances between x and x_pred if
+#' x_pred is not an empty matrix.
+#' @export
+#' @useDynLib sparseRGPs
+#' @importFrom Rcpp sourceCpp
 make_cov_matC <- function(x, x_pred, cov_par, cov_fun, delta) {
     .Call('_sparseRGPs_make_cov_matC', PACKAGE = 'sparseRGPs', x, x_pred, cov_par, cov_fun, delta)
 }
 
+#' Make a covariance matrix with  covariance function
+#'
+#' @param x Matrix of observed data values
+#' @param x_pred Potentially an empty matrix. If not empty, this returns
+#' the covariance between x and x_pred.
+#' @param cov_par Named list of covariance parameters. Need
+#' "sigma", "tau", and "l1", ..., "ld" where d is the input dimension
+#' @param cov_fun A character string specifying the covariance function.
+#' Currently only works with "ard".
+#' @param delta Scalar value that functions as a fixed nugget used to
+#' stabilize matrix inverses and decompositions.
+#' @param lnames Vector of the names of the length scale parameters, i.e.
+#' "l1", ..., "ld"
+#' @return Covariance matrix at the observed data locations if
+#' x_pred = matrix(), or the covariances between x and x_pred if
+#' x_pred is not an empty matrix.
+#' @export
+#' @useDynLib sparseRGPs
+#' @importFrom Rcpp sourceCpp
 make_cov_mat_ardC <- function(x, x_pred, cov_par, cov_fun, delta, lnames) {
     .Call('_sparseRGPs_make_cov_mat_ardC', PACKAGE = 'sparseRGPs', x, x_pred, cov_par, cov_fun, delta, lnames)
 }

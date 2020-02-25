@@ -89,6 +89,8 @@
 #' specify the variable m, which is a vector of length equal to y. This
 #' is a part of the mean of the Poisson where E(Y) = m*exp(f(x)) and f(x)
 #' is the value of the latent GP at x.
+#' @return Returns a list of values corresponding to the fitted GP.
+#' @export
 optimize_gp <- function(y,
                         xy,
                         cov_fun = "sqexp",
