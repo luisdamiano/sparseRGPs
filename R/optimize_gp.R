@@ -1,8 +1,6 @@
 #' Train a GP via type-II maximum likelihood.
 #'
 #' @description Train a full or sparse GP via type-II maximum likelihood.
-#' Optimization is done using
-#' Adadelta (Zeiler, 2012).
 #' @param y Vector of the observed response values.
 #' @param xy Matrix of the observed input/covariate values. Rows correspond to
 #' elements of y.
@@ -136,6 +134,8 @@
 #'          results$u_post: a list where each element is a list showing the posterior
 #'          mean and variance-covariance matrix of the
 #'          latent function at the knots after adding each knot
+#' @importFrom Rdpack reprompt
+#'
 #' @export
 optimize_gp <- function(y,
                         xy,

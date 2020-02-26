@@ -177,6 +177,4 @@ Returns a list of values corresponding to the fitted GP. These include:
 }
 \description{
 Train a full or sparse GP via type-II maximum likelihood.
-Optimization is done using
-Adadelta (Zeiler, 2012).
 }

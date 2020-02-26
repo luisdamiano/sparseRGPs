@@ -11,8 +11,8 @@ Description: Fit sparse and full Gaussian processes with Type-II
   and select covariance parameters and/or knots. Predictions in the 
   non-Gaussian case also use the Gaussian posterior approximation 
   implied by the Laplace approximation. In the Gaussian data case, 
-  there is an option to use the variational approximation proposed by 
-  Titsias (2009). Otherwise, FI(T)C models are fit.
+  there is an option to use the variational approximation. 
+  Otherwise, FI(T)C models are fit.
   In the case that sparse models are used, 
   knots can be held fixed, 
   simultaneously optimized alongside covariance parameters, or 
@@ -23,7 +23,9 @@ Imports:
     ggplot2,
     Matrix,
     mvtnorm,
-    Rcpp
+    Rcpp,
+    Rdpack
+RdMacros: Rdpack 
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
