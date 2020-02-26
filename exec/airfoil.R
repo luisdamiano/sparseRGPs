@@ -8,6 +8,8 @@
 ##  results in numerical problems for some models and thus was changed to
 ##  delta = 1e-4. These changes should be very minimal.
 
+## You will need to have packages ggplot2 and reshape2 installed.
+
 ## read in raw Airfoil data
 # airfoil_raw <- read.table(file = "Data/airfoil_self_noise.dat", header = FALSE)
 airfoil <- airfoil_raw
@@ -205,7 +207,7 @@ for(i in 1:runs)
 ## print the results table
 results <- results_table[-1,]
 
-## create the Boston results figure from the paper
+## create the Airfoil results figure from the paper
 ## create model index
 results$xu_opt <- as.character(results$xu_opt)
 results$xu_opt[(results$xu_opt) == "NA"] <- "-"
@@ -272,7 +274,7 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 # The palette with black:
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7")
 
-results_plots <- ggplot(data = results_long) +
+results_plots <- ggplot2::ggplot(data = results_long) +
   geom_point(mapping = aes(x = run, y = value, colour = Model, shape = Model), size = 2) +
   facet_grid(Metric ~ ., scales = "free_y") +
   theme_bw() +
