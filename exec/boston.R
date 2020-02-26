@@ -17,8 +17,8 @@ boston <- boston[,colnames(boston) %in% keep_nms]
 ## You can sample the data to test this script quickly.
 ##    I would also recommend changing the maximum number of knots and
 ##    iterations to be smaller.
-set.seed(1000)
-boston <- boston[sample.int(n = nrow(boston_raw[boston_raw$medv < 50,]), size = 200, replace = FALSE),]
+# set.seed(1000)
+# boston <- boston[sample.int(n = nrow(boston_raw[boston_raw$medv < 50,]), size = 200, replace = FALSE),]
 
 ## function to center and scale the predictors
 my_scale <- function(x, mean_vec, sd_vec)

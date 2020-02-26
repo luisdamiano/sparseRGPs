@@ -19,8 +19,8 @@ colnames(airfoil) <- c(paste("X",1:5, sep = ""), "y")
 ## You can sample the data to test this script quickly.
 ##    I would also recommend changing the maximum number of knots and
 ##    iterations to be smaller.
-set.seed(1000)
-airfoil <- airfoil[sample.int(n = nrow(airfoil_raw), size = 200, replace = FALSE),]
+# set.seed(1000)
+# airfoil <- airfoil[sample.int(n = nrow(airfoil_raw), size = 200, replace = FALSE),]
 
 ## function to center and scale the data
 my_scale <- function(x, mean_vec, sd_vec)
