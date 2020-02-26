@@ -2,7 +2,7 @@
 # http://lib.stat.cmu.edu/datasets/boston
 
 ## read in raw Boston data
-# boston_raw <- read.csv(file = "Data/Boston.csv", header = TRUE)[,-1]
+boston_raw <- read.csv(file = "Data/Boston.csv", header = TRUE)[,-1]
 
 ## You will need to have packages ggplot2 and reshape2 installed.
 
@@ -13,6 +13,12 @@ boston <- boston[boston$medv < 50,]
 keep_nms <- c("rm", "lstat", "ptratio", "medv")
 
 boston <- boston[,colnames(boston) %in% keep_nms]
+
+## You can sample the data to test this script quickly.
+##    I would also recommend changing the maximum number of knots and
+##    iterations to be smaller.
+set.seed(1000)
+boston <- boston[sample.int(n = nrow(boston_raw[boston_raw$medv < 50,]), size = 200, replace = FALSE),]
 
 ## function to center and scale the predictors
 my_scale <- function(x, mean_vec, sd_vec)

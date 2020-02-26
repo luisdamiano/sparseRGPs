@@ -8,7 +8,11 @@
 
 ccpp_raw <- ccpp
 
-ccpp <- ccpp[sample.int(n = nrow(ccpp_raw), size = 200, replace = FALSE),]
+## You can sample the data to test this script quickly.
+##    I would also recommend changing the maximum number of knots and
+##    iterations to be smaller.
+# set.seed(1000)
+# ccpp <- ccpp[sample.int(n = nrow(ccpp_raw), size = 200, replace = FALSE),]
 
 ## function to center and scale the data
 my_scale <- function(x, mean_vec, sd_vec)
