@@ -1,0 +1,231 @@
+---
+title: "Regression with sparseRGPs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Regression with sparseRGPs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+First we will simulate and visualize some data from a 2D regression.
+
+```{r setup}
+library(sparseRGPs)
+library(ggplot2)
+
+## locations
+set.seed(1116)
+xy <- matrix(data = runif(n = 400, min = 0, max = 10), ncol = 2)
+
+## make covariance matrix
+cov_par_gp <- list("sigma" = 3, "l" = 3, "tau" = 0)
+Sigma <- make_cov_matC(x = xy, x_pred = matrix(),
+                       cov_par = cov_par_gp,
+                       cov_fun = "sqexp", delta = 1e-6)
+
+## sample the true latent GP
+mu <- rep(0, times = nrow(xy))
+ff <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = mu, sigma = Sigma))
+
+## sample the data
+tau <- 1
+y <- ff + rnorm(n = length(ff), mean = 0, sd = tau)
+
+## plot the real observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+```
+
+```{r sparse-fic}
+###############################################
+## fit the sparse GP model using OAT
+###############################################
+
+## initialize covariance parameters
+cov_par_start <- list("sigma" = 3, "l" = 3, "tau" = 1)
+
+## initial knots
+xu_init <- matrix(data = runif(n = 10, min = 0, max = 10), ncol = 2)
+
+## maximum number of knots
+maxknot <- 30
+
+## number of candidate knot proposals explored
+TTmax <- maxknot / 2
+
+## minimum number of candidate knot proposals to explore
+TTmin <- 5
+
+## maximum number of gradient ascent iterations
+maxit <- 500
+
+## objective function tolerance
+obj_tol <- 1e-4
+
+## initial step size parameter in ADADELTA
+epsilon <- 1e-4
+
+## Fit the sparse GP
+## Should take approximately 2-3 minutes
+system.time(gp_fit <- optimize_gp(y = y, xy = xy,
+                      cov_fun = "sqexp",
+                      cov_par_start = cov_par_start,
+                      mu = mu,
+                      family = "gaussian",
+                      nugget = TRUE,
+                      sparse = TRUE,
+                      xu_opt = "oat",
+                      xu = xu_init,
+                      muu = rep(0, times = nrow(xu_init)),
+                      vi = FALSE, opt = list(maxknot = maxknot,
+                                             TTmax = TTmax,
+                                             TTmin = TTmin,
+                                             maxit = maxit,
+                                             obj_tol = obj_tol,
+                                             epsilon = epsilon),
+                      verbose = FALSE))
+
+## look at estimated covariance parameters
+gp_fit$results$cov_par
+
+## selected knots 
+gp_fit$results$xu
+
+
+## plot the optimized objective function values for each added knot
+plot(1:length(gp_fit$results$obj_fun), gp_fit$results$obj_fun)
+
+## get predictions 
+x_pred <- as.matrix(expand.grid(seq(from = 0, to = 10, by = 0.1), 
+                                seq(from = 0, to = 10, by = 0.1)))
+preds <- predict_gp(mod = gp_fit, 
+                   x_pred = x_pred, 
+                   mu_pred = rep(0, times = nrow(x_pred)), 
+                   full_cov = FALSE, 
+                   vi = FALSE)
+
+## plot the real observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+
+## plot predictions over a fine grid
+ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds$pred$pred_mean))
+
+
+## plot the knots
+ggplot() +
+  geom_point(mapping = aes(x = gp_fit$results$xu[,1], y = gp_fit$results$xu[,2])) +
+  geom_point(mapping = aes(x = gp_fit$xu_init[,1], y = gp_fit$xu_init[,2]), 
+             colour = "blue", shape = 2, size = 2)
+
+```
+
+```{r sparse-vi}
+## fit a sparse GP using a variational approximation
+##  This should take 1-2 minutes
+system.time(gp_fit_vi <- optimize_gp(y = y, xy = xy,
+                           cov_fun = "sqexp",
+                           cov_par_start = cov_par_start,
+                           mu = mu,
+                           family = "gaussian",
+                           nugget = TRUE,
+                           sparse = TRUE,
+                           xu_opt = "oat",
+                           xu = xu_init,
+                           muu = rep(0, times = nrow(xu_init)),
+                           vi = TRUE, 
+                           opt = list(maxknot = maxknot,
+                                             TTmax = TTmax,
+                                             TTmin = TTmin,
+                                             maxit = maxit,
+                                             obj_tol = obj_tol,
+                                             epsilon = epsilon),
+                           verbose = FALSE))
+
+gp_fit_full$results$cov_par
+
+## get predictions from a full GP
+pred_full <- predict_gp(mod = gp_fit_full, 
+                        x_pred = x_pred, 
+                        mu_pred = rep(0, times = nrow(x_pred)), 
+                        full_cov = FALSE, 
+                        vi = FALSE)
+
+## plot the real observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+
+## plot the predictions
+#full
+full_plot <- ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = pred_full$pred$pred_mean))
+
+#sparse
+sparse_plot <- ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds$pred$pred_mean))
+
+gridExtra::grid.arrange(full_plot, sparse_plot)
+
+## plot predictions against each other to see how they match
+plot(x = pred_full$pred$pred_mean, y = preds$pred$pred_mean)
+
+## standard deviation comparison
+plot(x = sqrt(pred_full$pred$pred_var), y = sqrt(preds$pred$pred_var))
+abline(a = 0, b = 1)
+```
+
+```{r full}
+## fit a full GP
+##  This should take 1-2 minutes
+system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
+                           cov_fun = "sqexp",
+                           cov_par_start = cov_par_start,
+                           mu = mu,
+                           family = "gaussian",
+                           nugget = TRUE,
+                           sparse = FALSE,
+                           vi = FALSE, opt = list(
+                             maxit = maxit,
+                             obj_tol = obj_tol,
+                             epsilon = epsilon),
+                           verbose = TRUE))
+
+gp_fit_full$results$cov_par
+
+## get predictions from a full GP
+pred_full <- predict_gp(mod = gp_fit_full, 
+                        x_pred = x_pred, 
+                        mu_pred = rep(0, times = nrow(x_pred)), 
+                        full_cov = FALSE, 
+                        vi = FALSE)
+
+## plot the real observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+
+## plot the predictions
+#full
+full_plot <- ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = pred_full$pred$pred_mean))
+
+#sparse
+sparse_plot <- ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds$pred$pred_mean))
+
+gridExtra::grid.arrange(full_plot, sparse_plot)
+
+## plot predictions against each other to see how they match
+plot(x = pred_full$pred$pred_mean, y = preds$pred$pred_mean)
+
+## standard deviation comparison
+plot(x = sqrt(pred_full$pred$pred_var), y = sqrt(preds$pred$pred_var))
+abline(a = 0, b = 1)
+```

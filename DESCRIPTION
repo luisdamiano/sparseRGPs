@@ -32,3 +32,7 @@ LazyData: true
 RoxygenNote: 7.0.2
 LinkingTo: 
     Rcpp
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
