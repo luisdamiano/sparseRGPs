@@ -130,9 +130,10 @@ ggplot() +
   geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
 
 ## plot predictions over a fine grid
+probs <- 1 / (1 + exp(-preds_fic$pred$pred_mean))
 ggplot() +
   geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
-                          fill = 1 / (1 + exp(-preds_fic$pred$pred_mean)) ))
+                          fill = probs ))
 
 
 ## plot the knots
@@ -146,7 +147,7 @@ ggplot() +
 
 ```{r full, message=FALSE}
 ## fit a full GP
-##  This should take 1-2 minutes
+##  This should take a few minutes (maybe more than 10)
 system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
                            cov_fun = "sqexp",
                            cov_par_start = cov_par_start,
@@ -176,9 +177,12 @@ ggplot() +
 
 ## plot the predictions
 #full
+probs_full <- 1 / (1 + exp(-preds_full$pred$pred_mean))
 full_plot <- ggplot() +
   geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
-                          fill = preds_full$pred$pred_mean))
+                          fill = probs_full))
+
+full_plot
 
 ## plot predictions against each other to see how they match
 plot(x = preds_full$pred$pred_mean, y = preds_fic$pred$pred_mean)
