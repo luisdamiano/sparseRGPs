@@ -1,8 +1,8 @@
 ---
-title: "Regression with sparseRGPs"
+title: "Classification with sparseRGPs"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Regression with sparseRGPs}
+  %\VignetteIndexEntry{Classification with sparseRGPs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-First we will simulate and visualize some data from a 2D regression.
+First we will simulate and visualize some data from a 2D classification.
 
 ```{r setup}
 library(sparseRGPs)
@@ -25,7 +25,7 @@ set.seed(1116)
 xy <- matrix(data = runif(n = 400, min = 0, max = 10), ncol = 2)
 
 ## make covariance matrix
-cov_par_gp <- list("sigma" = 3, "l" = 3, "tau" = 0)
+cov_par_gp <- list("sigma" = 5, "l" = 2, "tau" = 0)
 Sigma <- make_cov_matC(x = xy, x_pred = matrix(),
                        cov_par = cov_par_gp,
                        cov_fun = "sqexp", delta = 1e-6)
@@ -35,12 +35,11 @@ mu <- rep(0, times = nrow(xy))
 ff <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = mu, sigma = Sigma))
 
 ## sample the data
-tau <- 1
-y <- ff + rnorm(n = length(ff), mean = 0, sd = tau)
+y <- rbinom(n = 200, size = 1, prob = 1 / (1 + exp(-ff)))
 
-## plot the real observations
+## plot the observations
 ggplot() +
-  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y ))
 ```
 
 Let's fit a sparse GP using one-at-a-time knot selection using the 
@@ -52,7 +51,7 @@ log-likelihood as the objective function.
 ###############################################
 
 ## initialize covariance parameters
-cov_par_start <- list("sigma" = 3, "l" = 3, "tau" = 1)
+cov_par_start <- list("sigma" = 5, "l" = 2, "tau" = 1e-1)
 
 ## initial knots
 xu_init <- matrix(data = runif(n = 10, min = 0, max = 10), ncol = 2)
@@ -73,28 +72,34 @@ maxit <- 500
 obj_tol <- 1e-4
 
 ## initial step size parameter in ADADELTA
-epsilon <- 1e-4
+epsilon <- 1e-3
+
+## set a lower bound on the nugget of the latent GP to ensure stability
+##    As a rough rule of thumb, sigma^2 / (tau^2 + delta) > 1e6 starts to 
+##    enter territory where certain matrix inverses may be at risk of failing.
+delta <- 1e-3
 
 ## Fit the sparse GP
-## Should take approximately 2-3 minutes
+## Should take approximately 5-6 minutes
 system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
                                   xy = xy, # matrix of observed input locations
                       cov_fun = "sqexp", # covariance function
                       cov_par_start = cov_par_start, # initial covariance parameter values
                       mu = mu, # marginal means of the GP at xy
-                      family = "gaussian", # conditional distribution of Y|f
+                      family = "bernoulli", # conditional distribution of Y|f
                       nugget = TRUE, # do you want to estimate the noise variance/nugget?
                       sparse = TRUE, # do you want to estimate a sparse model?
                       xu_opt = "oat", # method of knot selection
                       xu = xu_init, # initial knots
                       muu = rep(0, times = nrow(xu_init)), # marginal GP means at the knots
-                      vi = FALSE, # use variational inference instead of maximum likelihood?
+                      vi = FALSE, # note variational inference cannot be used with binary data
                       opt = list(maxknot = maxknot, # set algorithmic parameters
                                              TTmax = TTmax, 
                                              TTmin = TTmin,
                                              maxit = maxit,
                                              obj_tol = obj_tol,
-                                             epsilon = epsilon),
+                                             epsilon = epsilon,
+                                             delta = delta),
                       verbose = FALSE))
 
 ## look at estimated covariance parameters
@@ -134,54 +139,6 @@ ggplot() +
 
 ```
 
-Now we fit a sparse GP using the one-at-a-time knot selection algorithm but 
-using variational inference and the evidence lower 
-bound (ELBO) as the objective function.
-
-```{r sparse-vi, message=FALSE}
-## fit a sparse GP using a variational approximation
-##  This should take 5-6 minutes
-system.time(gp_fit_vi <- optimize_gp(y = y, xy = xy,
-                           cov_fun = "sqexp",
-                           cov_par_start = cov_par_start,
-                           mu = mu,
-                           family = "gaussian",
-                           nugget = TRUE,
-                           sparse = TRUE,
-                           xu_opt = "oat",
-                           xu = xu_init,
-                           muu = rep(0, times = nrow(xu_init)),
-                           vi = TRUE, 
-                           opt = list(maxknot = maxknot,
-                                             TTmax = TTmax,
-                                             TTmin = TTmin,
-                                             maxit = maxit,
-                                             obj_tol = obj_tol,
-                                             epsilon = epsilon),
-                           verbose = FALSE))
-
-gp_fit_vi$results$cov_par
-
-## get predictions from a full GP
-preds_vi <- predict_gp(mod = gp_fit_vi, 
-                        x_pred = x_pred, 
-                        mu_pred = rep(0, times = nrow(x_pred)), 
-                        full_cov = FALSE, 
-                        vi = TRUE)
-
-## plot the real observations
-ggplot() +
-  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
-
-## plot the predictions
-#sparse vi model
-vi_plot <- ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds_vi$pred$pred_mean))
-
-```
-
-Now we estimate the full GP and compare the predictions made from each model 
-in a scatterplot matrix.
 
 ```{r full, message=FALSE}
 ## fit a full GP
@@ -190,13 +147,14 @@ system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
                            cov_fun = "sqexp",
                            cov_par_start = cov_par_start,
                            mu = mu,
-                           family = "gaussian",
+                           family = "bernoulli",
                            nugget = TRUE,
                            sparse = FALSE,
                            vi = FALSE, opt = list(
                              maxit = maxit,
                              obj_tol = obj_tol,
-                             epsilon = epsilon),
+                             epsilon = epsilon,
+                             delta = delta),
                            verbose = TRUE))
 
 gp_fit_full$results$cov_par
@@ -215,10 +173,10 @@ ggplot() +
 ## plot the predictions
 #full
 full_plot <- ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds_full$pred$pred_mean))
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
+                          fill = preds_full$pred$pred_mean))
 
 ## plot predictions against each other to see how they match
-pairs(cbind(preds_full$pred$pred_mean, 
-            preds_fic$pred$pred_mean,
-            preds_vi$pred$pred_mean))
+plot(x = preds_full$pred$pred_mean, y = preds_fic$pred$pred_mean)
 ```
+
