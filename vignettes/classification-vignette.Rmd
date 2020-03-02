@@ -17,15 +17,19 @@ knitr::opts_chunk$set(
 First we will simulate and visualize some data from a 2D classification.
 
 ```{r setup}
-library(sparseRGPs)
+## uncomment the following line if you used devtools::install_github("nategarton13/sparseRGPs")
+# library(sparseRGPs)
+
+## comments out the following line if you used devtools::install_github("nategarton13/sparseRGPs")
+devtools::load_all()
 library(ggplot2)
 
 ## locations
-set.seed(1116)
+set.seed(1118)
 xy <- matrix(data = runif(n = 400, min = 0, max = 10), ncol = 2)
 
 ## make covariance matrix
-cov_par_gp <- list("sigma" = 5, "l" = 2, "tau" = 0)
+cov_par_gp <- list("sigma" = 2, "l" = 3, "tau" = 0)
 Sigma <- make_cov_matC(x = xy, x_pred = matrix(),
                        cov_par = cov_par_gp,
                        cov_fun = "sqexp", delta = 1e-6)
@@ -80,7 +84,7 @@ epsilon <- 1e-3
 delta <- 1e-3
 
 ## Fit the sparse GP
-## Should take approximately 5-6 minutes
+## Should take approximately 10 minutes
 system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
                                   xy = xy, # matrix of observed input locations
                       cov_fun = "sqexp", # covariance function
@@ -128,7 +132,7 @@ ggplot() +
 ## plot predictions over a fine grid
 ggplot() +
   geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
-                          fill = preds_fic$pred$pred_mean))
+                          fill = 1 / (1 + exp(-preds_fic$pred$pred_mean)) ))
 
 
 ## plot the knots
@@ -155,7 +159,7 @@ system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
                              obj_tol = obj_tol,
                              epsilon = epsilon,
                              delta = delta),
-                           verbose = TRUE))
+                           verbose = FALSE))
 
 gp_fit_full$results$cov_par
 

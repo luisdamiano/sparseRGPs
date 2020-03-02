@@ -17,7 +17,11 @@ knitr::opts_chunk$set(
 First we will simulate and visualize some data from a 2D regression.
 
 ```{r setup}
-library(sparseRGPs)
+## uncomment the following line if you used devtools::install_github("nategarton13/sparseRGPs")
+# library(sparseRGPs)
+
+## comments out the following line if you used devtools::install_github("nategarton13/sparseRGPs")
+devtools::load_all()
 library(ggplot2)
 
 ## locations
@@ -141,7 +145,8 @@ bound (ELBO) as the objective function.
 ```{r sparse-vi, message=FALSE}
 ## fit a sparse GP using a variational approximation
 ##  This should take 5-6 minutes
-system.time(gp_fit_vi <- optimize_gp(y = y, xy = xy,
+system.time(gp_fit_vi <- optimize_gp(y = y, 
+                                     xy = xy,
                            cov_fun = "sqexp",
                            cov_par_start = cov_par_start,
                            mu = mu,
@@ -186,18 +191,20 @@ in a scatterplot matrix.
 ```{r full, message=FALSE}
 ## fit a full GP
 ##  This should take 1-2 minutes
-system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
+system.time(gp_fit_full <- optimize_gp(y = y, 
+                                       xy = xy,
                            cov_fun = "sqexp",
                            cov_par_start = cov_par_start,
                            mu = mu,
                            family = "gaussian",
                            nugget = TRUE,
                            sparse = FALSE,
-                           vi = FALSE, opt = list(
+                           vi = FALSE, 
+                           opt = list(
                              maxit = maxit,
                              obj_tol = obj_tol,
                              epsilon = epsilon),
-                           verbose = TRUE))
+                           verbose = FALSE))
 
 gp_fit_full$results$cov_par
 
