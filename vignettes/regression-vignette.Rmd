@@ -43,7 +43,10 @@ ggplot() +
   geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
 ```
 
-```{r sparse-fic}
+Let's fit a sparse GP using one-at-a-time knot selection using the 
+log-likelihood as the objective function. 
+
+```{r sparse-fic, message=FALSE}
 ###############################################
 ## fit the sparse GP model using OAT
 ###############################################
@@ -74,17 +77,19 @@ epsilon <- 1e-4
 
 ## Fit the sparse GP
 ## Should take approximately 2-3 minutes
-system.time(gp_fit <- optimize_gp(y = y, xy = xy,
-                      cov_fun = "sqexp",
-                      cov_par_start = cov_par_start,
-                      mu = mu,
-                      family = "gaussian",
-                      nugget = TRUE,
-                      sparse = TRUE,
-                      xu_opt = "oat",
-                      xu = xu_init,
-                      muu = rep(0, times = nrow(xu_init)),
-                      vi = FALSE, opt = list(maxknot = maxknot,
+system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
+                                  xy = xy, # matrix of observed input locations
+                      cov_fun = "sqexp", # covariance function
+                      cov_par_start = cov_par_start, # initial covariance parameter values
+                      mu = mu, # marginal means of the GP at xy
+                      family = "gaussian", # conditional distribution of Y|f
+                      nugget = TRUE, # do you want to estimate the noise variance/nugget?
+                      sparse = TRUE, # do you want to estimate a sparse model?
+                      xu_opt = "oat", # method of knot selection
+                      xu = xu_init, # initial knots
+                      muu = rep(0, times = nrow(xu_init)), # marginal GP means at the knots
+                      vi = FALSE, # use variational inference instead of maximum likelihood?
+                      opt = list(maxknot = maxknot,
                                              TTmax = TTmax,
                                              TTmin = TTmin,
                                              maxit = maxit,
@@ -93,19 +98,19 @@ system.time(gp_fit <- optimize_gp(y = y, xy = xy,
                       verbose = FALSE))
 
 ## look at estimated covariance parameters
-gp_fit$results$cov_par
+gp_fit_fic$results$cov_par
 
 ## selected knots 
-gp_fit$results$xu
+gp_fit_fic$results$xu
 
 
 ## plot the optimized objective function values for each added knot
-plot(1:length(gp_fit$results$obj_fun), gp_fit$results$obj_fun)
+plot(1:length(gp_fit_fic$results$obj_fun), gp_fit_fic$results$obj_fun)
 
 ## get predictions 
 x_pred <- as.matrix(expand.grid(seq(from = 0, to = 10, by = 0.1), 
                                 seq(from = 0, to = 10, by = 0.1)))
-preds <- predict_gp(mod = gp_fit, 
+preds_fic <- predict_gp(mod = gp_fit_fic, 
                    x_pred = x_pred, 
                    mu_pred = rep(0, times = nrow(x_pred)), 
                    full_cov = FALSE, 
@@ -117,20 +122,21 @@ ggplot() +
 
 ## plot predictions over a fine grid
 ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds$pred$pred_mean))
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
+                          fill = preds_fic$pred$pred_mean))
 
 
 ## plot the knots
 ggplot() +
-  geom_point(mapping = aes(x = gp_fit$results$xu[,1], y = gp_fit$results$xu[,2])) +
-  geom_point(mapping = aes(x = gp_fit$xu_init[,1], y = gp_fit$xu_init[,2]), 
+  geom_point(mapping = aes(x = gp_fit_fic$results$xu[,1], y = gp_fit_fic$results$xu[,2])) +
+  geom_point(mapping = aes(x = gp_fit_fic$xu_init[,1], y = gp_fit_fic$xu_init[,2]), 
              colour = "blue", shape = 2, size = 2)
 
 ```
 
-```{r sparse-vi}
+```{r sparse-vi, message=FALSE}
 ## fit a sparse GP using a variational approximation
-##  This should take 1-2 minutes
+##  This should take 5-6 minutes
 system.time(gp_fit_vi <- optimize_gp(y = y, xy = xy,
                            cov_fun = "sqexp",
                            cov_par_start = cov_par_start,
@@ -150,10 +156,10 @@ system.time(gp_fit_vi <- optimize_gp(y = y, xy = xy,
                                              epsilon = epsilon),
                            verbose = FALSE))
 
-gp_fit_full$results$cov_par
+gp_fit_vi$results$cov_par
 
 ## get predictions from a full GP
-pred_full <- predict_gp(mod = gp_fit_full, 
+preds_vi <- predict_gp(mod = gp_fit_vi, 
                         x_pred = x_pred, 
                         mu_pred = rep(0, times = nrow(x_pred)), 
                         full_cov = FALSE, 
@@ -164,25 +170,13 @@ ggplot() +
   geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
 
 ## plot the predictions
-#full
-full_plot <- ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = pred_full$pred$pred_mean))
+#sparse vi model
+vi_plot <- ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds_vi$pred$pred_mean))
 
-#sparse
-sparse_plot <- ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds$pred$pred_mean))
-
-gridExtra::grid.arrange(full_plot, sparse_plot)
-
-## plot predictions against each other to see how they match
-plot(x = pred_full$pred$pred_mean, y = preds$pred$pred_mean)
-
-## standard deviation comparison
-plot(x = sqrt(pred_full$pred$pred_var), y = sqrt(preds$pred$pred_var))
-abline(a = 0, b = 1)
 ```
 
-```{r full}
+```{r full, message=FALSE}
 ## fit a full GP
 ##  This should take 1-2 minutes
 system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
@@ -201,7 +195,7 @@ system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
 gp_fit_full$results$cov_par
 
 ## get predictions from a full GP
-pred_full <- predict_gp(mod = gp_fit_full, 
+preds_full <- predict_gp(mod = gp_fit_full, 
                         x_pred = x_pred, 
                         mu_pred = rep(0, times = nrow(x_pred)), 
                         full_cov = FALSE, 
@@ -214,18 +208,10 @@ ggplot() +
 ## plot the predictions
 #full
 full_plot <- ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = pred_full$pred$pred_mean))
-
-#sparse
-sparse_plot <- ggplot() +
-  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds$pred$pred_mean))
-
-gridExtra::grid.arrange(full_plot, sparse_plot)
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], fill = preds_full$pred$pred_mean))
 
 ## plot predictions against each other to see how they match
-plot(x = pred_full$pred$pred_mean, y = preds$pred$pred_mean)
-
-## standard deviation comparison
-plot(x = sqrt(pred_full$pred$pred_var), y = sqrt(preds$pred$pred_var))
-abline(a = 0, b = 1)
+pairs(cbind(preds_full$preds$pred_mean, 
+            preds_fic$preds$pred_mean,
+            preds_vi$preds$pred_mean))
 ```

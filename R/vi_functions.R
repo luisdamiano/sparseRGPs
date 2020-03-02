@@ -672,7 +672,8 @@ norm_grad_ascent_vi <- function(cov_par_start,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: you supplied an argument to opt() not utilized by this function.")
+        # print("Warning: you supplied an argument to opt() not utilized by this function.")
+        next
       }
       else{
         ind <- which(names(opt_master) == names(opt)[i])
@@ -1607,7 +1608,8 @@ knot_prop_ego_norm_vi <- function(norm_opt,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        # print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        next
       }
 
       else{
@@ -2117,7 +2119,8 @@ knot_prop_random_norm_vi <- function(norm_opt,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        # print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        next
         # return()
       }
 

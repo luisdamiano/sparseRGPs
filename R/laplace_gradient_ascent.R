@@ -686,7 +686,8 @@ laplace_grad_ascent_full <- function(cov_par_start,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: you supplied an argument to opt() not utilized by this function.")
+        # print("Warning: you supplied an argument to opt() not utilized by this function.")
+        next
       }
       else{
         ind <- which(names(opt_master) == names(opt)[i])
@@ -1172,7 +1173,8 @@ norm_grad_ascent <- function(cov_par_start,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: you supplied an argument to opt() not utilized by this function.")
+        # print("Warning: you supplied an argument to opt() not utilized by this function.")
+        next
       }
       else{
         ind <- which(names(opt_master) == names(opt)[i])
@@ -1738,7 +1740,8 @@ norm_grad_ascent_full <- function(cov_par_start,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: you supplied an argument to opt() not utilized by this function.")
+        # print("Warning: you supplied an argument to opt() not utilized by this function.")
+        next
       }
       else{
         ind <- which(names(opt_master) == names(opt)[i])
@@ -2079,7 +2082,8 @@ norm_grad_ascent_sor <- function(cov_par_start,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: you supplied an argument to opt() not utilized by this function.")
+        # print("Warning: you supplied an argument to opt() not utilized by this function.")
+        next
       }
       else{
         ind <- which(names(opt_master) == names(opt)[i])
