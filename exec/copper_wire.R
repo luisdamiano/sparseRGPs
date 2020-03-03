@@ -137,18 +137,13 @@ generate_source <- function(n, pi1, mu1, mu2, between_cov)
 
 }
 
-# generate_source(n = 10, pi1 = pi1, mu1 = mu1, mu2 = mu2, between_cov = between_covariance)
-
-# test the minimum score function
-# I <- 10
-# sources <- generate_source(n = I, pi1 = pi1, mu1 = mu1, mu2 = mu2, between_cov = between_covariance)
-#
-# mue <- sources[1:(I - 1),]
-# muek <- sources[I,]
-# mueu <- sources[I,] + rnorm(n = length(ek), mean = 0, sd = 1)
-# smin_fun(e = mue, ek = muek, eu = mueu)
-
-## actual likelihood ratio function
+## feature-based likelihood ratio function
+##  eu: vector of the unknown source chemical concentrations
+##  mu_mat: rbind(mu_k, mu_2, ..., e_{I - 1}), the matrix of
+##    mean chemical concentrations of the known sources
+##    within_cov: the within source covariance matrix
+##  probs: the mixing probabilities for H_{ss} = d
+##  log: if TRUE, return the log-likelihood ratio
 lr_fun <- function(eu, mu_mat, within_cov, probs = NA, log = TRUE)
 {
   if(is.na(probs))
@@ -182,6 +177,14 @@ lr_fun <- function(eu, mu_mat, within_cov, probs = NA, log = TRUE)
 }
 
 ## generate data under prosecutions hypothesis
+##    n: the number of samples to generate
+##    mue: the matrix of mean vectors for the sources in a database, i.e.
+##      not e_u or e_k
+##    muek: the mean vector of chemical concentrations of the known source
+##      evidence which has the same source as the unknown source evidence
+##    mueu: the mean vector of chemical concentrations of the unknown source
+##      evidence which has the same source as the known source evidence
+##      (technically this argument is redundant)
 generate_hp <- function(n, mue, muek, mueu, within_cov)
 {
   ## store samples in 3D array
@@ -204,6 +207,15 @@ generate_hp <- function(n, mue, muek, mueu, within_cov)
 }
 
 ## generate data under defense hypothesis
+##    n: the number of samples to generate
+##    mue: the matrix of mean vectors of chemical concentrations of the
+##      database sources, note that the mean of the unknown source evidence
+##      comes from one of these sources under H_{ss} = d
+##    muek: the mean vector of chemical concentrations of the known source
+##      evidence which, under H_{ss} = p, has the same source as
+##      the known source evidence
+##    probs: the mixing probabilities for H_{ss} = d
+##    within_cov: the within source covariance matrix
 generate_hd <- function(n, mue, muek, within_cov, probs = NA)
 {
   if(is.na(probs))
@@ -237,22 +249,18 @@ generate_hd <- function(n, mue, muek, within_cov, probs = NA)
 
 }
 
-## test data generation functions
-# test1 <- generate_hp(n = 5, mue = mue, muek = muek, mueu = mueu, within_cov = within_covariance)
-# test2 <- generate_hd(n = 3, mue = mue, muek = muek, mueu = mueu, within_cov = within_covariance)
-
 ## perform several runs
-runs <- 5
-n <- 2000
-N_A <- 500
-I <- N_A + 1
-TTmax <- 40
-TTmin <- 5
-maxit <- 500
-maxit_nr <- 200
-maxknot <- 75
-delta <- 1e-2
-epsilon <- 1e-4
+runs <- 3 ## to replicate exact paper results, set this to 5
+n <- 200 ## to replicate exact paper results, set this to 2000
+N_A <- 500 ## number of known sources
+I <- N_A + 1 ## number of total pieces of evidence
+TTmax <- 40 ## algorithmic parameters
+TTmin <- 5 ## algorithmic parameters
+maxit <- 500 ## algorithmic parameters
+maxit_nr <- 200 ## algorithmic parameters
+maxknot <- 75 ## algorithmic parameters
+delta <- 1e-2 ## algorithmic parameters
+epsilon <- 1e-4 ## algorithmic parameters
 results_table <- data.frame("score" = "temp",
                             "hypothesis" = "temp",
                             "true-KL" = 0,
@@ -260,19 +268,32 @@ results_table <- data.frame("score" = "temp",
                             "score-KL" = 0,
                             "score-KL-SD" = 0,
                             "RMSE" = 0, "Run" = 0)
-for(i in 1:runs)
+
+system.time(for(i in 1:runs)
 {
   set.seed(1307 + i)
   source_prior <- rep(1/(N_A - 1), times = N_A - 1)
 
   ## generate sources
-  sources <- generate_source(n = N_A, pi1 = pi1, mu1 = mu1, mu2 = mu2, between_cov = between_covariance)
+  sources <- generate_source(n = N_A,
+                             pi1 = pi1,
+                             mu1 = mu1,
+                             mu2 = mu2,
+                             between_cov = between_covariance)
   muek <- sources[1,]
   mue <- sources[2:N_A,]
 
   ## generate data
-  train_data_hp <- generate_hp(n = n, mue = mue, muek = muek, mueu = muek, within_cov = within_covariance)
-  train_data_hd <- generate_hd(n = n, mue = mue, muek = muek, within_cov = within_covariance, probs = source_prior)
+  train_data_hp <- generate_hp(n = n,
+                               mue = mue,
+                               muek = muek,
+                               mueu = muek,
+                               within_cov = within_covariance)
+  train_data_hd <- generate_hd(n = n,
+                               mue = mue,
+                               muek = muek,
+                               within_cov = within_covariance,
+                               probs = source_prior)
 
   ## get scores
   sdelta_hp <- apply(X = train_data_hp, MARGIN = 1, FUN = delta_wrapper)
@@ -286,8 +307,16 @@ for(i in 1:runs)
   smax_hd <- apply(X = train_data_hd, MARGIN = 1, FUN = smax_fun)
 
   ## generate test data
-  test_data_hp <- generate_hp(n = n, mue = mue, muek = muek, mueu = muek, within_cov = within_covariance)
-  test_data_hd <- generate_hd(n = n, mue = mue, muek = muek, within_cov = within_covariance, probs = source_prior)
+  test_data_hp <- generate_hp(n = n,
+                              mue = mue,
+                              muek = muek,
+                              mueu = muek,
+                              within_cov = within_covariance)
+  test_data_hd <- generate_hd(n = n,
+                              mue = mue,
+                              muek = muek,
+                              within_cov = within_covariance,
+                              probs = source_prior)
 
   ## get scores
   sdelta_hp_test <- apply(X = test_data_hp, MARGIN = 1, FUN = delta_wrapper)
@@ -318,18 +347,17 @@ for(i in 1:runs)
                      within_cov = within_covariance,
                      probs = NA, log = TRUE)
 
+  ########################################################
   ## train sparse GPs to get SLRs
+  ########################################################
   sdelta <- log(c(sdelta_hp, sdelta_hd))
   y <- rep(c(1,0), each = n)
-  # xu <- xy[sample.int(n = nrow(xy), size = 5, replace = FALSE),]
   xu0_delta <- kmeans(x = sdelta[1:n], centers = 5)$centers
   xu1_delta <- kmeans(x = sdelta[(n + 1):(2*n)], centers = 5)$centers
   xu_delta <- rbind(xu0_delta, xu1_delta)
   cp_start <- list("sigma" = 10, "l" = 6, "tau" = 1e-3)
 
-  # maxknot <- 20
-
-  # fpdelta <- "RA2019/RA2019code/sparse_gp_sdelta_ex1.rds"
+  ## The "delta" score
   set.seed(1308)
   system.time(gp_mod_sdelta <- optimize_gp(y = y,
                                            xy = sdelta, cov_fun = "sqexp",
@@ -365,18 +393,14 @@ for(i in 1:runs)
     log(1 - my_logistic(pred_gp_sdelta$pred$pred_mean)) -
     log(prior_p / (1 - prior_p))
 
-  ## min score
+  ## "min" score
   smin <- c(smin_hp, smin_hd)
   y <- rep(c(1,0), each = n)
-  # xu <- xy[sample.int(n = nrow(xy), size = 5, replace = FALSE),]
   xu0_min <- kmeans(x = smin[1:n], centers = 5)$centers
   xu1_min <- kmeans(x = smin[(n + 1):(2*n)], centers = 5)$centers
   xu_min <- rbind(xu0_min, xu1_min)
   cp_start <- list("sigma" = 10, "l" = 6, "tau" = 1e-3)
 
-  # maxknot <- 20
-
-  # fpmin <- "RA2019/RA2019code/sparse_gp_smin_ex1.rds"
   set.seed(1308)
   system.time(gp_mod_smin <- optimize_gp(y = y,
                                          xy = smin, cov_fun = "sqexp",
@@ -414,7 +438,7 @@ for(i in 1:runs)
     log(prior_p / (1 - prior_p))
 
 
-  ## use sparse GPs to get density ratios for avg score
+  ## the "average" score
   savg <- c(savg_hp, savg_hd)
   y <- rep(c(1,0), each = n)
   # xu <- xy[sample.int(n = nrow(xy), size = 5, replace = FALSE),]
@@ -423,9 +447,6 @@ for(i in 1:runs)
   xu_avg <- rbind(xu0_avg, xu1_avg)
   cp_start <- list("sigma" = 10, "l" = 6, "tau" = 1e-3)
 
-  # maxknot <- 20
-
-  # fpavg <- "RA2019/RA2019code/sparse_gp_savg_ex1.rds"
   set.seed(1308)
   system.time(gp_mod_savg <- optimize_gp(y = y,
                                          xy = savg, cov_fun = "sqexp",
@@ -462,7 +483,7 @@ for(i in 1:runs)
     log(1 - my_logistic(pred_gp_savg$pred$pred_mean)) -
     log(prior_p / (1 - prior_p))
 
-  ## use sparse GPs to get density ratios for max score
+  ## the "max" score
   smax <- c(smax_hp, smax_hd)
   y <- rep(c(1,0), each = n)
   # xu <- xy[sample.int(n = nrow(xy), size = 5, replace = FALSE),]
@@ -508,7 +529,7 @@ for(i in 1:runs)
     log(1 - my_logistic(pred_gp_smax$pred$pred_mean)) -
     log(prior_p / (1 - prior_p))
 
-  ## GP classifier
+  ## the "stacked" score
   xy <- cbind(c(smin_hp, smin_hd), c(savg_hp, savg_hd), c(smax_hp, smax_hd))
   L <- t(chol(x = cov(xy)))
 
@@ -522,9 +543,6 @@ for(i in 1:runs)
   xu <- rbind(xu0, xu1)
   cp_start_ard <- list("sigma" = 10, "l1" = 2, "l2" = 2, "l3" = 2, "tau" = 1e-3)
 
-  # maxknot <- 20
-
-  # fp <- "RA2019/RA2019code/sparse_gp_ex1.rds"
   system.time(gp_mod <- optimize_gp(y = y,
                                     xy = xy_trans, cov_fun = "ard",
                                     cov_par_start = cp_start_ard,
@@ -540,7 +558,7 @@ for(i in 1:runs)
                                                maxit_nr = maxit_nr,
                                                "epsilon" = epsilon,
                                                "grad_tol" = Inf, delta = delta),
-                                    verbose = TRUE, file_path = NULL))
+                                    verbose = FALSE, file_path = NULL))
 
   print(dim(gp_mod$results$xu))
   print("agg mod done")
@@ -642,10 +660,9 @@ for(i in 1:runs)
 
   print(paste("run " , i , " complete", sep = " "))
 
-}
+})
 
 # results_table
-write.csv(x = results_table[-1,], file = "/home/nmgarton/SLR/RA2019/RA2019code/copper_wire_results_NA500.csv")
+# write.csv(x = results_table[-1,], file = "/home/nmgarton/SLR/RA2019/RA2019code/copper_wire_results_NA500.csv")
 
-# cw_results <- read.csv(file = "/home/nmgarton/SLR/RA2019/RA2019code/copper_wire_results_NA500.csv")[,-1]
-# cw_results
+results_table
