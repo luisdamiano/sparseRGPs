@@ -269,6 +269,9 @@ results_table <- data.frame("score" = "temp",
                             "score-KL-SD" = 0,
                             "RMSE" = 0, "Run" = 0)
 
+
+## NOTE: Even the shortened version of
+##    this will take approximately 2 hours
 system.time(for(i in 1:runs)
 {
   set.seed(1307 + i)
@@ -662,7 +665,6 @@ system.time(for(i in 1:runs)
 
 })
 
-# results_table
-# write.csv(x = results_table[-1,], file = "/home/nmgarton/SLR/RA2019/RA2019code/copper_wire_results_NA500.csv")
-
+# results
 results_table
+cw_results <- results_table[-1,]
