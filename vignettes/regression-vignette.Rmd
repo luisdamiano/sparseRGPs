@@ -65,7 +65,7 @@ xu_init <- matrix(data = runif(n = 10, min = 0, max = 10), ncol = 2)
 maxknot <- 30
 
 ## number of candidate knot proposals explored
-TTmax <- maxknot / 2
+TTmax <- maxknot
 
 ## minimum number of candidate knot proposals to explore
 TTmin <- 5
