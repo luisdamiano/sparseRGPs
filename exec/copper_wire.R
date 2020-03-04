@@ -689,8 +689,7 @@ results_long[results_long$Metric == "RMSE",]$`Score KL SD` <- NA
 
 ## comment out for 5 runs as done in the paper
 true_kl <- cw_results[c(1,6,
-                        1 + 10,6 + 10,
-                        1 + 20,6 + 20),]
+                        1 + 10,6 + 10),]
 
 ## uncomment for 5 runs as done in the paper
 # true_kl <- cw_results[c(1,6,
