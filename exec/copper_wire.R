@@ -257,8 +257,8 @@ generate_hd <- function(n, mue, muek, within_cov, probs = NA)
 ##    simply requires a lot of data.
 ########################################################
 ## perform several runs
-runs <- 2 ## to replicate exact paper results, set this to 5
-n <- 500 ## to replicate exact paper results, set this to 2000
+runs <- 1 ## to replicate exact paper results, set this to 5
+n <- 2000
 N_A <- 500 ## number of known sources
 I <- N_A + 1 ## number of total pieces of evidence
 TTmax <- 40 ## algorithmic parameters
@@ -278,7 +278,7 @@ results_table <- data.frame("score" = "temp",
 
 
 ## NOTE: Even the shortened version of
-##    this will take approximately 2-4 hours
+##    this will take approximately 7 hours
 system.time(for(i in 1:runs)
 {
   set.seed(1307 + i)
@@ -688,8 +688,7 @@ results_long <- melt(data = cw_results, id.vars = c("Score", "Hypothesis", "Run"
 results_long[results_long$Metric == "RMSE",]$`Score KL SD` <- NA
 
 ## comment out for 5 runs as done in the paper
-true_kl <- cw_results[c(1,6,
-                        1 + 10,6 + 10),]
+true_kl <- cw_results[c(1,6),]
 
 ## uncomment for 5 runs as done in the paper
 # true_kl <- cw_results[c(1,6,
