@@ -12,25 +12,25 @@
 # source("laplace_approx_obj_funs.R")
 #'@export
 oat_knot_selection <- function(cov_par_start,
-                                cov_fun,
-                                dcov_fun_dtheta,
-                                dcov_fun_dknot,
-                                xu_start,
-                                proposal_fun,
-                                xy,
-                                y,
-                                ff,
-                                grad_loglik_fn,
-                                dlog_py_dff,
-                                d2log_py_dff,
-                                d3log_py_dff,
-                                mu = NA,
-                                muu_start = NA,
-                                transform = TRUE,
-                                obj_fun,
-                                opt = list(),
-                                verbose = FALSE,
-                                ...)
+                               cov_fun,
+                               dcov_fun_dtheta,
+                               dcov_fun_dknot,
+                               xu_start,
+                               proposal_fun,
+                               xy,
+                               y,
+                               ff,
+                               grad_loglik_fn,
+                               dlog_py_dff,
+                               d2log_py_dff,
+                               d3log_py_dff,
+                               mu = NA,
+                               muu_start = NA,
+                               transform = TRUE,
+                               obj_fun,
+                               opt = list(),
+                               verbose = FALSE,
+                               ...)
 {
   ## d2log_py_dff is a function that computes the vector of second derivatives
   ##      of log(p(y|f)) wrt f
@@ -70,7 +70,9 @@ oat_knot_selection <- function(cov_par_start,
                     "tol_knot" = 1e-1, "maxknot" = 30, "tol_nr" = 1e-5, "TTmin" = 10, "TTmax" = 30,
                     "ego_cov_par" = list("sigma" = 3, "l" = 1, "tau" = 1e-3), "ego_cov_fun" = "exp",
                     "ego_cov_fun_dtheta" = list("sigma" = dexp_dsigma,
-                                                "l" = dexp_dl))
+                                                "l" = dexp_dl),
+                    "cov_diff" = TRUE,
+                    "chooseK" = TRUE)
 
   ## potentially change default values in opt_master to user supplied values
   if(length(opt) > 0)
@@ -93,11 +95,13 @@ oat_knot_selection <- function(cov_par_start,
     }
   }
 
+  cov_diff <- opt_master$cov_diff
+  chooseK <- opt_master$chooseK
   optim_method = opt_master$optim_method
   optim_par = list("decay" = opt_master$decay,
-                 "epsilon" = opt_master$epsilon,
-                 "eta" = opt_master$eta,
-                 "learn_rate" = opt_master$learn_rate)
+                   "epsilon" = opt_master$epsilon,
+                   "eta" = opt_master$eta,
+                   "learn_rate" = opt_master$learn_rate)
   maxit = opt_master$maxit
   maxit_nr <- opt_master$maxit_nr
   obj_tol = opt_master$obj_tol
@@ -140,16 +144,16 @@ oat_knot_selection <- function(cov_par_start,
                              cov_fun = cov_fun,
                              dcov_fun_dtheta = dcov_fun_dtheta,
                              dcov_fun_dknot = NA, xu = xu,
-                            xy = xy, ff = ff, y = y, grad_loglik_fn = grad_loglik_fn,
-                            dlog_py_dff = dlog_py_dff,
-                            d2log_py_dff = d2log_py_dff,
-                            d3log_py_dff = d3log_py_dff,
-                            mu = mu, muu =  muu_start,
-                            transform = transform,
-                            obj_fun = obj_fun,
-                            opt = opt_master,
-                            verbose = verbose, ...
-                            )
+                             xy = xy, ff = ff, y = y, grad_loglik_fn = grad_loglik_fn,
+                             dlog_py_dff = dlog_py_dff,
+                             d2log_py_dff = d2log_py_dff,
+                             d3log_py_dff = d3log_py_dff,
+                             mu = mu, muu =  muu_start,
+                             transform = transform,
+                             obj_fun = obj_fun,
+                             opt = opt_master,
+                             verbose = verbose, ...
+  )
 
   ## optimize initial knot locations alongside covariance parameters
   # opt <- laplace_grad_ascent(cov_par_start = cov_par_start,
@@ -185,9 +189,11 @@ oat_knot_selection <- function(cov_par_start,
   iter <- 1
   opt_success <- TRUE
   ## do the OAT knot optimization
-  while(numknots < maxknot && ifelse(test = length(obj_fun_vals) == 1, yes = TRUE,
-               no = ifelse(test = current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot,
-                           yes = TRUE, no = FALSE)))
+  while(ifelse(test = chooseK, yes = numknots < maxknot && ifelse(test = length(obj_fun_vals) == 1, yes = TRUE,
+                                                                  no = ifelse(test = current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot,
+                                                                              yes = TRUE, no = FALSE)),
+               no = numknots < maxknot)
+  )
   {
     iter <- iter + 1
 
@@ -212,20 +218,22 @@ oat_knot_selection <- function(cov_par_start,
 
     ## optimize the covariance parameters and knot location
     opt_temp <- laplace_grad_ascent(cov_par_start = cov_par,
-                               cov_fun = cov_fun,
-                               dcov_fun_dtheta = dcov_fun_dtheta,
-                               dcov_fun_dknot = dcov_fun_dknot,
-                               xu = rbind(xu, knot_prop),
-                               knot_opt = (nrow(xu) + 1):(nrow(xu) + nrow(knot_prop)),
-                               xy = xy, ff = fmax, y = y, grad_loglik_fn = grad_loglik_fn,
-                               dlog_py_dff = dlog_py_dff,
-                               d2log_py_dff = d2log_py_dff,
-                               d3log_py_dff = d3log_py_dff,
-                               mu = mu, muu = c(muu, muu[1]),
-                               transform = transform,
-                               obj_fun = obj_fun,
-                               opt = opt_master,
-                               verbose = verbose, ...
+                                    cov_fun = cov_fun,
+                                    dcov_fun_dtheta = dcov_fun_dtheta,
+                                    dcov_fun_dknot = dcov_fun_dknot,
+                                    xu = rbind(xu, knot_prop),
+                                    knot_opt = ifelse(test = cov_diff == TRUE,
+                                                      yes = (nrow(xu) + 1):(nrow(xu) + nrow(knot_prop)),
+                                                      no = NA),
+                                    xy = xy, ff = fmax, y = y, grad_loglik_fn = grad_loglik_fn,
+                                    dlog_py_dff = dlog_py_dff,
+                                    d2log_py_dff = d2log_py_dff,
+                                    d3log_py_dff = d3log_py_dff,
+                                    mu = mu, muu = c(muu, muu[1]),
+                                    transform = transform,
+                                    obj_fun = obj_fun,
+                                    opt = opt_master,
+                                    verbose = verbose, ...
     )
 
     opt_success <- FALSE
@@ -238,7 +246,10 @@ oat_knot_selection <- function(cov_par_start,
     ga_steps[iter] <- opt$iter
     current_obj_fun <- opt$obj_fun[length(opt$obj_fun)]
     obj_fun_vals[iter] <- opt$obj_fun[length(opt$obj_fun)]
-    if(current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot)
+    if(ifelse(test = chooseK,
+              yes = current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot,
+              no = TRUE)
+    )
     {
       cov_par_vals <- rbind(cov_par_vals, as.numeric(opt$cov_par))
 
@@ -296,21 +307,21 @@ oat_knot_selection <- function(cov_par_start,
 ## OAT knot selection for Gaussian data
 #'@export
 oat_knot_selection_norm <- function(cov_par_start,
-                               cov_fun,
-                               dcov_fun_dtheta,
-                               dcov_fun_dknot,
-                               obj_fun,
-                               xu_start,
-                               proposal_fun,
-                               xy,
-                               y,
-                               ff = NA,
-                               mu,
-                               muu_start,
-                               transform = TRUE,
-                               opt = list(),
-                               verbose = FALSE,
-                               ...)
+                                    cov_fun,
+                                    dcov_fun_dtheta,
+                                    dcov_fun_dknot,
+                                    obj_fun,
+                                    xu_start,
+                                    proposal_fun,
+                                    xy,
+                                    y,
+                                    ff = NA,
+                                    mu,
+                                    muu_start,
+                                    transform = TRUE,
+                                    opt = list(),
+                                    verbose = FALSE,
+                                    ...)
 {
   ## cov_par_start is a list of the starting values of the covariance function parameters
   ##    NAMES AND ORDERING MUST MATCH dcov_fun_dtheta
@@ -344,7 +355,9 @@ oat_knot_selection_norm <- function(cov_par_start,
                     "tol_knot" = 1e-3, "maxknot" = 30, "TTmin" = 10, "TTmax" = 40,
                     "ego_cov_par" = list("sigma" = 3, "l" = 1, "tau" = 1e-3), "ego_cov_fun" = "exp",
                     "ego_cov_fun_dtheta" = list("sigma" = dexp_dsigma,
-                                                "l" = dexp_dl))
+                                                "l" = dexp_dl),
+                    "cov_diff" = TRUE,
+                    "chooseK" = TRUE)
 
   ## potentially change default values in opt_master to user supplied values
   if(length(opt) > 0)
@@ -367,6 +380,8 @@ oat_knot_selection_norm <- function(cov_par_start,
     }
   }
 
+  chooseK <- opt_master$chooseK
+  cov_diff <- opt_master$cov_diff
   optim_method = opt_master$optim_method
   optim_par = list("decay" = opt_master$decay,
                    "epsilon" = opt_master$epsilon,
@@ -410,15 +425,15 @@ oat_knot_selection_norm <- function(cov_par_start,
 
   ## optimize the objective fn wrt the covariance parameters only
   opt <- norm_grad_ascent(cov_par_start = cov_par_start,
-                             cov_fun = cov_fun,
-                             dcov_fun_dtheta = dcov_fun_dtheta,
-                             dcov_fun_dknot = NA, xu = xu,
-                             xy = xy, ff = NA, y = y,
-                             mu = mu, muu =  muu,
-                             transform = transform,
-                             obj_fun = obj_fun,
-                             opt = opt_master,
-                             verbose = verbose, ...
+                          cov_fun = cov_fun,
+                          dcov_fun_dtheta = dcov_fun_dtheta,
+                          dcov_fun_dknot = NA, xu = xu,
+                          xy = xy, ff = NA, y = y,
+                          mu = mu, muu =  muu,
+                          transform = transform,
+                          obj_fun = obj_fun,
+                          opt = opt_master,
+                          verbose = verbose, ...
   )
 
   current_obj_fun <- opt$obj_fun[length(opt$obj_fun)] ## current objective function value
@@ -434,9 +449,11 @@ oat_knot_selection_norm <- function(cov_par_start,
   numknots <- nrow(xu_start) ## keep track of the number of knots
   iter <- 1
   ## do the OAT knot optimization
-  while(numknots < maxknot && ifelse(test = length(obj_fun_vals) == 1, yes = TRUE,
-                                     no = ifelse(test = current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot,
-                                                 yes = TRUE, no = FALSE)))
+  while(ifelse(test = chooseK, yes = numknots < maxknot && ifelse(test = length(obj_fun_vals) == 1, yes = TRUE,
+                                                                  no = ifelse(test = current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot,
+                                                                              yes = TRUE, no = FALSE)),
+               no = numknots < maxknot)
+  )
   {
     iter <- iter + 1
 
@@ -461,7 +478,9 @@ oat_knot_selection_norm <- function(cov_par_start,
                             dcov_fun_dtheta = dcov_fun_dtheta,
                             dcov_fun_dknot = dcov_fun_dknot,
                             xu = rbind(xu, knot_prop),
-                            knot_opt = (nrow(xu) + 1):(nrow(xu) + nrow(knot_prop)),
+                            knot_opt = ifelse(test = cov_diff == TRUE,
+                                              yes = (nrow(xu) + 1):(nrow(xu) + nrow(knot_prop)),
+                                              no = NA),
                             xy = xy, ff = NA, y = y,
                             mu = mu, muu = c(muu, muu[1]),
                             transform = transform,
@@ -474,7 +493,10 @@ oat_knot_selection_norm <- function(cov_par_start,
     obj_fun_vals[iter] <- opt$obj_fun[length(opt$obj_fun)]
 
 
-    if(current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot)
+    if(ifelse(test = chooseK,
+              yes = current_obj_fun - obj_fun_vals[length(obj_fun_vals) - 1] > tol_knot,
+              no = TRUE)
+    )
     {
       cov_par_vals <- rbind(cov_par_vals, as.numeric(opt$cov_par))
 
@@ -520,4 +542,3 @@ oat_knot_selection_norm <- function(cov_par_start,
   }
 
 }
-

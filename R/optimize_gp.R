@@ -69,6 +69,13 @@
 #'
 #'     maxknot: Maximum number of allowable knots
 #'
+#'     cov_diff: Logical value indicating whether to treat the covariance
+#'     function as if it is not differentiable so that each added knot
+#'     is not optimized continuously
+#'
+#'     chooseK: Logical value indicating whether to select the total number
+#'     of knots or continue adding knots until maxknot is reached
+#'
 #'     TTmax: Maximum number of candidate knot proposals to test in the OAT
 #'     algorithm
 #'
@@ -165,7 +172,9 @@ optimize_gp <- function(y,
                     "ego_cov_fun" = "exp",
                     "ego_cov_fun_dtheta" = list("sigma" = dexp_dsigma,
                                                 "l" = dexp_dl),
-                    "TTmax" = 30, "TTmin" = 10)
+                    "TTmax" = 30, "TTmin" = 10,
+                    "cov_diff" = TRUE,
+                    "chooseK" = TRUE)
 
   ## don't let user use basic gradient ascent
   if(opt_master$optim_method == "ga")
@@ -199,7 +208,6 @@ optimize_gp <- function(y,
 
   ## rename opt_master to opt
   opt <- opt_master
-  opt$tol_knot <- opt$obj_tol
 
 
   args <- list(...)
@@ -226,7 +234,7 @@ optimize_gp <- function(y,
     if(nugget == FALSE)
     {
       dcov_fun_dtheta <- list("sigma" = dsqexp_dsigma_ard
-                              )
+      )
     }
     dcov_fun_dknot <- dsqexp_dx2_ard
   }
@@ -270,85 +278,6 @@ optimize_gp <- function(y,
         {
           dcov_fun_dknot <- NA
           results <- norm_grad_ascent_vi(cov_par_start = cov_par_start,
-                                      cov_fun = cov_fun,
-                                      dcov_fun_dtheta = dcov_fun_dtheta,
-                                      dcov_fun_dknot = dcov_fun_dknot,
-                                      knot_opt = NA, xu = xu,
-                                      xy = xy,
-                                      y = y,
-                                      muu = muu,
-                                      mu = mu,
-                                      transform = TRUE,
-                                      obj_fun = elbo_fun,
-                                      opt = opt,
-                                      verbose = verbose)
-        }
-
-        if(xu_opt == "simultaneous")
-        {
-          results <- norm_grad_ascent_vi(cov_par_start = cov_par_start,
-                                      cov_fun = "sqexp",
-                                      dcov_fun_dtheta = dcov_fun_dtheta,
-                                      dcov_fun_dknot = dcov_fun_dknot,
-                                      knot_opt = 1:nrow(xu),
-                                      xu = xu,
-                                      xy = xy,
-                                      y = y,
-                                      muu = muu,
-                                      mu = mu,
-                                      transform = TRUE,
-                                      obj_fun =  elbo_fun,
-                                      opt = opt,
-                                      verbose = verbose)
-        }
-
-        if(xu_opt == "oat")
-        {
-          results <- oat_knot_selection_norm_vi(cov_par_start = cov_par_start,
-                                             cov_fun = cov_fun,
-                                             dcov_fun_dtheta = dcov_fun_dtheta,
-                                             dcov_fun_dknot = dcov_fun_dknot,
-                                             xu_start = xu,
-                                             xy = xy,
-                                             y = y,
-                                             mu = mu,
-                                             muu_start = muu,
-                                             obj_fun = elbo_fun,
-                                             opt = opt,
-                                             transform = TRUE,
-                                             verbose = verbose,
-                                             proposal_fun = knot_prop_ego_norm_vi,
-                                             predict_laplace = predict_laplace
-          )
-        }
-
-        if(xu_opt == "random")
-        {
-          results <- oat_knot_selection_norm_vi(cov_par_start = cov_par_start,
-                                             cov_fun = cov_fun,
-                                             dcov_fun_dtheta = dcov_fun_dtheta,
-                                             dcov_fun_dknot = dcov_fun_dknot,
-                                             xu_start = xu,
-                                             xy = xy,
-                                             y = y,
-                                             mu = mu,
-                                             muu_start = muu,
-                                             obj_fun = elbo_fun,
-                                             opt = opt,
-                                             transform = TRUE,
-                                             verbose = verbose,
-                                             proposal_fun = knot_prop_random_norm_vi,
-                                             predict_laplace = predict_laplace
-          )
-        }
-      }
-
-      if(vi == FALSE)
-      {
-        if(xu_opt == "fixed")
-        {
-          dcov_fun_dknot <- NA
-          results <- norm_grad_ascent(cov_par_start = cov_par_start,
                                          cov_fun = cov_fun,
                                          dcov_fun_dtheta = dcov_fun_dtheta,
                                          dcov_fun_dknot = dcov_fun_dknot,
@@ -358,14 +287,14 @@ optimize_gp <- function(y,
                                          muu = muu,
                                          mu = mu,
                                          transform = TRUE,
-                                         obj_fun = obj_fun_norm,
+                                         obj_fun = elbo_fun,
                                          opt = opt,
                                          verbose = verbose)
         }
 
         if(xu_opt == "simultaneous")
         {
-          results <- norm_grad_ascent(cov_par_start = cov_par_start,
+          results <- norm_grad_ascent_vi(cov_par_start = cov_par_start,
                                          cov_fun = "sqexp",
                                          dcov_fun_dtheta = dcov_fun_dtheta,
                                          dcov_fun_dknot = dcov_fun_dknot,
@@ -376,9 +305,88 @@ optimize_gp <- function(y,
                                          muu = muu,
                                          mu = mu,
                                          transform = TRUE,
-                                         obj_fun = obj_fun_norm,
+                                         obj_fun =  elbo_fun,
                                          opt = opt,
                                          verbose = verbose)
+        }
+
+        if(xu_opt == "oat")
+        {
+          results <- oat_knot_selection_norm_vi(cov_par_start = cov_par_start,
+                                                cov_fun = cov_fun,
+                                                dcov_fun_dtheta = dcov_fun_dtheta,
+                                                dcov_fun_dknot = dcov_fun_dknot,
+                                                xu_start = xu,
+                                                xy = xy,
+                                                y = y,
+                                                mu = mu,
+                                                muu_start = muu,
+                                                obj_fun = elbo_fun,
+                                                opt = opt,
+                                                transform = TRUE,
+                                                verbose = verbose,
+                                                proposal_fun = knot_prop_ego_norm_vi,
+                                                predict_laplace = predict_laplace
+          )
+        }
+
+        if(xu_opt == "random")
+        {
+          results <- oat_knot_selection_norm_vi(cov_par_start = cov_par_start,
+                                                cov_fun = cov_fun,
+                                                dcov_fun_dtheta = dcov_fun_dtheta,
+                                                dcov_fun_dknot = dcov_fun_dknot,
+                                                xu_start = xu,
+                                                xy = xy,
+                                                y = y,
+                                                mu = mu,
+                                                muu_start = muu,
+                                                obj_fun = elbo_fun,
+                                                opt = opt,
+                                                transform = TRUE,
+                                                verbose = verbose,
+                                                proposal_fun = knot_prop_random_norm_vi,
+                                                predict_laplace = predict_laplace
+          )
+        }
+      }
+
+      if(vi == FALSE)
+      {
+        if(xu_opt == "fixed")
+        {
+          dcov_fun_dknot <- NA
+          results <- norm_grad_ascent(cov_par_start = cov_par_start,
+                                      cov_fun = cov_fun,
+                                      dcov_fun_dtheta = dcov_fun_dtheta,
+                                      dcov_fun_dknot = dcov_fun_dknot,
+                                      knot_opt = NA, xu = xu,
+                                      xy = xy,
+                                      y = y,
+                                      muu = muu,
+                                      mu = mu,
+                                      transform = TRUE,
+                                      obj_fun = obj_fun_norm,
+                                      opt = opt,
+                                      verbose = verbose)
+        }
+
+        if(xu_opt == "simultaneous")
+        {
+          results <- norm_grad_ascent(cov_par_start = cov_par_start,
+                                      cov_fun = "sqexp",
+                                      dcov_fun_dtheta = dcov_fun_dtheta,
+                                      dcov_fun_dknot = dcov_fun_dknot,
+                                      knot_opt = 1:nrow(xu),
+                                      xu = xu,
+                                      xy = xy,
+                                      y = y,
+                                      muu = muu,
+                                      mu = mu,
+                                      transform = TRUE,
+                                      obj_fun = obj_fun_norm,
+                                      opt = opt,
+                                      verbose = verbose)
         }
 
         if(xu_opt == "oat")
@@ -433,74 +441,74 @@ optimize_gp <- function(y,
       {
         dcov_fun_dknot <- NA
         results <- laplace_grad_ascent(cov_par_start = cov_par_start,
-                                   cov_fun = cov_fun,
-                                   dcov_fun_dtheta = dcov_fun_dtheta,
-                                   dcov_fun_dknot = dcov_fun_dknot,
-                                   knot_opt = NA,
-                                   xu = xu,
-                                   xy = xy,
-                                   y = y,
-                                   ff = rep(log(mean(y)), times = length(y)) - log(m),
-                                   grad_loglik_fn = grad_loglik_fn_pois,
-                                   dlog_py_dff = dlog_py_dff_pois,
-                                   d2log_py_dff = d2log_py_dff_pois,
-                                   d3log_py_dff = d3log_py_dff_pois,
-                                   mu = mu,
-                                   muu = muu,
-                                   obj_fun = obj_fun_pois,
-                                   opt = opt,
-                                   verbose = verbose,
-                                   predict_laplace = predict_laplace,
-                                   m = m,
-                                   ...)
+                                       cov_fun = cov_fun,
+                                       dcov_fun_dtheta = dcov_fun_dtheta,
+                                       dcov_fun_dknot = dcov_fun_dknot,
+                                       knot_opt = NA,
+                                       xu = xu,
+                                       xy = xy,
+                                       y = y,
+                                       ff = rep(log(mean(y)), times = length(y)) - log(m),
+                                       grad_loglik_fn = grad_loglik_fn_pois,
+                                       dlog_py_dff = dlog_py_dff_pois,
+                                       d2log_py_dff = d2log_py_dff_pois,
+                                       d3log_py_dff = d3log_py_dff_pois,
+                                       mu = mu,
+                                       muu = muu,
+                                       obj_fun = obj_fun_pois,
+                                       opt = opt,
+                                       verbose = verbose,
+                                       predict_laplace = predict_laplace,
+                                       m = m,
+                                       ...)
       }
       if(xu_opt == "simultaneous")
       {
         results <- laplace_grad_ascent(cov_par_start = cov_par_start,
-                                   cov_fun = cov_fun,
-                                   dcov_fun_dtheta = dcov_fun_dtheta,
-                                   dcov_fun_dknot = dcov_fun_dknot,
-                                   knot_opt = 1:nrow(xu),
-                                   xu = xu,
-                                   xy = xy,
-                                   y = y,
-                                   ff = rep(log(mean(y)), times = length(y)) - log(m),
-                                   grad_loglik_fn = grad_loglik_fn_pois,
-                                   dlog_py_dff = dlog_py_dff_pois,
-                                   d2log_py_dff = d2log_py_dff_pois,
-                                   d3log_py_dff = d3log_py_dff_pois,
-                                   mu = mu,
-                                   muu = muu,
-                                   obj_fun = obj_fun_pois,
-                                   opt = opt,
-                                   verbose = verbose,
-                                   predict_laplace = predict_laplace,
-                                   m = m,
-                                   ...)
+                                       cov_fun = cov_fun,
+                                       dcov_fun_dtheta = dcov_fun_dtheta,
+                                       dcov_fun_dknot = dcov_fun_dknot,
+                                       knot_opt = 1:nrow(xu),
+                                       xu = xu,
+                                       xy = xy,
+                                       y = y,
+                                       ff = rep(log(mean(y)), times = length(y)) - log(m),
+                                       grad_loglik_fn = grad_loglik_fn_pois,
+                                       dlog_py_dff = dlog_py_dff_pois,
+                                       d2log_py_dff = d2log_py_dff_pois,
+                                       d3log_py_dff = d3log_py_dff_pois,
+                                       mu = mu,
+                                       muu = muu,
+                                       obj_fun = obj_fun_pois,
+                                       opt = opt,
+                                       verbose = verbose,
+                                       predict_laplace = predict_laplace,
+                                       m = m,
+                                       ...)
       }
       if(xu_opt == "oat")
       {
         results <- oat_knot_selection(cov_par_start = cov_par_start,
-                                  cov_fun = cov_fun,
-                                  dcov_fun_dtheta = dcov_fun_dtheta,
-                                  dcov_fun_dknot = dcov_fun_dknot,
-                                  xu_start = xu,
-                                  xy = xy,
-                                  y = y,
-                                  ff = rep(log(mean(y)), times = length(y)) - log(m),
-                                  grad_loglik_fn = grad_loglik_fn_pois,
-                                  dlog_py_dff = dlog_py_dff_pois,
-                                  d2log_py_dff = d2log_py_dff_pois,
-                                  d3log_py_dff = d3log_py_dff_pois,
-                                  mu = mu,
-                                  muu_start = muu,
-                                  obj_fun = obj_fun_pois,
-                                  opt = opt,
-                                  verbose = verbose,
-                                  proposal_fun = knot_prop_ego,
-                                  predict_laplace = predict_laplace,
-                                  m = m,
-                                  ...)
+                                      cov_fun = cov_fun,
+                                      dcov_fun_dtheta = dcov_fun_dtheta,
+                                      dcov_fun_dknot = dcov_fun_dknot,
+                                      xu_start = xu,
+                                      xy = xy,
+                                      y = y,
+                                      ff = rep(log(mean(y)), times = length(y)) - log(m),
+                                      grad_loglik_fn = grad_loglik_fn_pois,
+                                      dlog_py_dff = dlog_py_dff_pois,
+                                      d2log_py_dff = d2log_py_dff_pois,
+                                      d3log_py_dff = d3log_py_dff_pois,
+                                      mu = mu,
+                                      muu_start = muu,
+                                      obj_fun = obj_fun_pois,
+                                      opt = opt,
+                                      verbose = verbose,
+                                      proposal_fun = knot_prop_ego,
+                                      predict_laplace = predict_laplace,
+                                      m = m,
+                                      ...)
       }
       if(xu_opt == "random")
       {
@@ -536,72 +544,72 @@ optimize_gp <- function(y,
       {
         dcov_fun_dknot <- NA
         results <- laplace_grad_ascent(cov_par_start = cov_par_start,
-                                   cov_fun = cov_fun,
-                                   dcov_fun_dtheta = dcov_fun_dtheta,
-                                   dcov_fun_dknot = dcov_fun_dknot,
-                                   knot_opt = NA,
-                                   xu = xu,
-                                   xy = xy,
-                                   y = y,
-                                   ff = rep(0, times = length(y)),
-                                   grad_loglik_fn = grad_loglik_fn_bern,
-                                   dlog_py_dff = dlog_py_dff_bern,
-                                   d2log_py_dff = d2log_py_dff_bern,
-                                   d3log_py_dff = d3log_py_dff_bern,
-                                   mu = mu,
-                                   muu = muu,
-                                   obj_fun = obj_fun_bern,
-                                   opt = opt,
-                                   verbose = verbose,
-                                   predict_laplace = predict_laplace,
-                                   ...)
+                                       cov_fun = cov_fun,
+                                       dcov_fun_dtheta = dcov_fun_dtheta,
+                                       dcov_fun_dknot = dcov_fun_dknot,
+                                       knot_opt = NA,
+                                       xu = xu,
+                                       xy = xy,
+                                       y = y,
+                                       ff = rep(0, times = length(y)),
+                                       grad_loglik_fn = grad_loglik_fn_bern,
+                                       dlog_py_dff = dlog_py_dff_bern,
+                                       d2log_py_dff = d2log_py_dff_bern,
+                                       d3log_py_dff = d3log_py_dff_bern,
+                                       mu = mu,
+                                       muu = muu,
+                                       obj_fun = obj_fun_bern,
+                                       opt = opt,
+                                       verbose = verbose,
+                                       predict_laplace = predict_laplace,
+                                       ...)
       }
       if(xu_opt == "simultaneous")
       {
         results <- laplace_grad_ascent(cov_par_start = cov_par_start,
-                                   cov_fun = cov_fun,
-                                   dcov_fun_dtheta = dcov_fun_dtheta,
-                                   dcov_fun_dknot = dcov_fun_dknot,
-                                   knot_opt = 1:nrow(xu),
-                                   xu = xu,
-                                   xy = xy,
-                                   y = y,
-                                   ff = rep(0, times = length(y)),
-                                   grad_loglik_fn = grad_loglik_fn_bern,
-                                   dlog_py_dff = dlog_py_dff_bern,
-                                   d2log_py_dff = d2log_py_dff_bern,
-                                   d3log_py_dff = d3log_py_dff_bern,
-                                   mu = mu,
-                                   muu = muu,
-                                   obj_fun = obj_fun_bern,
-                                   opt = opt,
-                                   verbose = verbose,
-                                   predict_laplace = predict_laplace,
-                                   ...)
+                                       cov_fun = cov_fun,
+                                       dcov_fun_dtheta = dcov_fun_dtheta,
+                                       dcov_fun_dknot = dcov_fun_dknot,
+                                       knot_opt = 1:nrow(xu),
+                                       xu = xu,
+                                       xy = xy,
+                                       y = y,
+                                       ff = rep(0, times = length(y)),
+                                       grad_loglik_fn = grad_loglik_fn_bern,
+                                       dlog_py_dff = dlog_py_dff_bern,
+                                       d2log_py_dff = d2log_py_dff_bern,
+                                       d3log_py_dff = d3log_py_dff_bern,
+                                       mu = mu,
+                                       muu = muu,
+                                       obj_fun = obj_fun_bern,
+                                       opt = opt,
+                                       verbose = verbose,
+                                       predict_laplace = predict_laplace,
+                                       ...)
       }
       if(xu_opt == "oat")
       {
         results <- oat_knot_selection(cov_par_start = cov_par_start,
-                                  cov_fun = cov_fun,
-                                  dcov_fun_dtheta = dcov_fun_dtheta,
-                                  dcov_fun_dknot = dcov_fun_dknot,
-                                  xu_start = xu,
-                                  xy = xy,
-                                  y = y,
-                                  ff = rep(0, times = length(y)),
-                                  # ff = global_ff,
-                                  grad_loglik_fn = grad_loglik_fn_bern,
-                                  dlog_py_dff = dlog_py_dff_bern,
-                                  d2log_py_dff = d2log_py_dff_bern,
-                                  d3log_py_dff = d3log_py_dff_bern,
-                                  mu = mu,
-                                  muu_start = muu,
-                                  obj_fun = obj_fun_bern,
-                                  opt = opt,
-                                  verbose = verbose,
-                                  proposal_fun = knot_prop_ego,
-                                  predict_laplace = predict_laplace,
-                                  ...)
+                                      cov_fun = cov_fun,
+                                      dcov_fun_dtheta = dcov_fun_dtheta,
+                                      dcov_fun_dknot = dcov_fun_dknot,
+                                      xu_start = xu,
+                                      xy = xy,
+                                      y = y,
+                                      ff = rep(0, times = length(y)),
+                                      # ff = global_ff,
+                                      grad_loglik_fn = grad_loglik_fn_bern,
+                                      dlog_py_dff = dlog_py_dff_bern,
+                                      d2log_py_dff = d2log_py_dff_bern,
+                                      d3log_py_dff = d3log_py_dff_bern,
+                                      mu = mu,
+                                      muu_start = muu,
+                                      obj_fun = obj_fun_bern,
+                                      opt = opt,
+                                      verbose = verbose,
+                                      proposal_fun = knot_prop_ego,
+                                      predict_laplace = predict_laplace,
+                                      ...)
       }
       if(xu_opt == "random")
       {
@@ -636,54 +644,54 @@ optimize_gp <- function(y,
     if(family == "gaussian")
     {
       results <- norm_grad_ascent_full(cov_par_start = cov_par_start,
-                                   cov_fun = cov_fun,
-                                   dcov_fun_dtheta = dcov_fun_dtheta,
-                                   xy = xy,
-                                   y = y,
-                                   mu = mu,
-                                   transform = TRUE,
-                                   obj_fun = obj_fun_norm_full,
-                                   opt = opt,
-                                   verbose = verbose)
+                                       cov_fun = cov_fun,
+                                       dcov_fun_dtheta = dcov_fun_dtheta,
+                                       xy = xy,
+                                       y = y,
+                                       mu = mu,
+                                       transform = TRUE,
+                                       obj_fun = obj_fun_norm_full,
+                                       opt = opt,
+                                       verbose = verbose)
     }
 
     if(family == "poisson")
     {
       results <- laplace_grad_ascent_full(cov_par_start = cov_par_start,
-                                      cov_fun = cov_fun,
-                                      dcov_fun_dtheta = dcov_fun_dtheta,
-                                      xy = xy,
-                                      y = y,
-                                      ff = rep(log(mean(y)), times = length(y)) - log(m),
-                                      grad_loglik_fn = grad_loglik_fn_pois_full,
-                                      dlog_py_dff = dlog_py_dff_pois,
-                                      d2log_py_dff = d2log_py_dff_pois,
-                                      d3log_py_dff = d3log_py_dff_pois,
-                                      mu = mu,
-                                      transform = TRUE,
-                                      verbose = verbose,
-                                      obj_fun = obj_fun_pois_full,
-                                      opt = opt,
-                                      m = m)
+                                          cov_fun = cov_fun,
+                                          dcov_fun_dtheta = dcov_fun_dtheta,
+                                          xy = xy,
+                                          y = y,
+                                          ff = rep(log(mean(y)), times = length(y)) - log(m),
+                                          grad_loglik_fn = grad_loglik_fn_pois_full,
+                                          dlog_py_dff = dlog_py_dff_pois,
+                                          d2log_py_dff = d2log_py_dff_pois,
+                                          d3log_py_dff = d3log_py_dff_pois,
+                                          mu = mu,
+                                          transform = TRUE,
+                                          verbose = verbose,
+                                          obj_fun = obj_fun_pois_full,
+                                          opt = opt,
+                                          m = m)
     }
 
     if(family == "bernoulli")
     {
       results <- laplace_grad_ascent_full(cov_par_start = cov_par_start,
-                                      cov_fun = cov_fun,
-                                      dcov_fun_dtheta = dcov_fun_dtheta,
-                                      xy = xy,
-                                      y = y,
-                                      ff = rep(0, times = length(y)),
-                                      grad_loglik_fn = grad_loglik_fn_bern_full,
-                                      dlog_py_dff = dlog_py_dff_bern,
-                                      d2log_py_dff = d2log_py_dff_bern,
-                                      d3log_py_dff = d3log_py_dff_bern,
-                                      mu = mu,
-                                      transform = TRUE,
-                                      verbose = verbose,
-                                      obj_fun = obj_fun_bern_full,
-                                      opt = opt)
+                                          cov_fun = cov_fun,
+                                          dcov_fun_dtheta = dcov_fun_dtheta,
+                                          xy = xy,
+                                          y = y,
+                                          ff = rep(0, times = length(y)),
+                                          grad_loglik_fn = grad_loglik_fn_bern_full,
+                                          dlog_py_dff = dlog_py_dff_bern,
+                                          d2log_py_dff = d2log_py_dff_bern,
+                                          d3log_py_dff = d3log_py_dff_bern,
+                                          mu = mu,
+                                          transform = TRUE,
+                                          verbose = verbose,
+                                          obj_fun = obj_fun_bern_full,
+                                          opt = opt)
     }
   }
 
