@@ -104,6 +104,13 @@ will likely need to be set are "delta", "maxknot", and potentially
 
     maxknot: Maximum number of allowable knots
 
+    cov_diff: Logical value indicating whether to treat the covariance
+    function as if it is not differentiable so that each added knot
+    is not optimized continuously
+
+    chooseK: Logical value indicating whether to select the total number
+    of knots or continue adding knots until maxknot is reached
+
     TTmax: Maximum number of candidate knot proposals to test in the OAT
     algorithm
 

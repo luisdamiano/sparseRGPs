@@ -86,7 +86,8 @@ knot_prop_ego <- function(laplace_opt,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        # print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        next
       }
 
       else{
@@ -524,7 +525,8 @@ knot_prop_ego_norm <- function(norm_opt,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        # print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        next
       }
 
       else{
@@ -1018,7 +1020,8 @@ knot_prop_random <- function(laplace_opt,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        # print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        next
       }
 
       else{
@@ -1179,8 +1182,9 @@ knot_prop_random_norm <- function(norm_opt,
       ## if an argument is misspelled or not accepted, throw an error
       if(!any(names(opt_master) == names(opt)[i]))
       {
-        print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
+        # print("Warning: invalid or unnecessary argument to opt(). Proceeding with fingers crossed.")
         # return()
+        next
       }
 
       else{
