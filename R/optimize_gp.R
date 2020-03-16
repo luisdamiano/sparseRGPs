@@ -209,6 +209,25 @@ optimize_gp <- function(y,
   ## rename opt_master to opt
   opt <- opt_master
 
+  ## check to make sure that 0 < TTmin < TTmax < N - K
+  ##    K < N
+  if(sparse == TRUE & maxknot >= length(y))
+  {
+    print("Error: Maximum number of knots must be less than
+           the number of data points.")
+    return()
+  }
+  if(xu_opt %in% c("random", "oat") & (
+    opt$TTmin <= 0 ||
+     opt$TTmax <= opt$TTmin ||
+     opt$TTmax >= (length(y) - maxknot)
+    )
+  ){
+    print("Error: Must adhere to 0 < TTmin < TTmax < N - maxknot. Recommend
+           setting both TTmax and maxknot < N / 2 or using a full GP.")
+    return()
+  }
+
 
   args <- list(...)
   if(cov_fun == "sqexp")
