@@ -1724,7 +1724,7 @@ knot_prop_ego_norm_vi <- function(norm_opt,
       while(class(obj_fun_eval) == "try-error")
       {
         pseudo_prop[i,] <- norm_opt$xy[sample.int(n = nrow(norm_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = norm_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop[i,])
 
         ## Create data GP covariance matrices
@@ -1992,7 +1992,7 @@ knot_prop_ego_norm_vi <- function(norm_opt,
       while(class(obj_fun_eval) == "try-error")
       {
         pseudo_prop <- norm_opt$xy[sample.int(n = nrow(norm_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop), mean = 0, sd = norm_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop)
 
         ## Create data GP covariance matrices
@@ -2234,7 +2234,7 @@ knot_prop_random_norm_vi <- function(norm_opt,
       while(class(obj_fun_eval == "try-error"))
       {
         pseudo_prop[i,] <- norm_opt$xy[sample.int(n = nrow(norm_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = norm_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop[i,])
 
         ## Create data GP covariance matrices

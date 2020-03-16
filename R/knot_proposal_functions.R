@@ -175,7 +175,7 @@ knot_prop_ego <- function(laplace_opt,
       while(class(nr_opt) == "try-error")
       {
         pseudo_prop[i,] <- laplace_opt$xy[sample.int(n = nrow(laplace_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = laplace_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop[i,])
         # print(pseudo_xu)
 
@@ -346,7 +346,8 @@ knot_prop_ego <- function(laplace_opt,
   K12 <- make_cov_matC(x = laplace_opt$xy, x_pred = obj_fun_x, cov_par = ego_cov_par, cov_fun = ego_cov_fun, delta = delta / 1000)
   K22 <- make_cov_matC(x = obj_fun_x, x_pred = matrix(), cov_fun = ego_cov_fun, cov_par = ego_cov_par, delta = delta / 1000)
 
-  pred_obj_fun <- rep(obj_fun_vals[1], times = nrow(K12)) + as.numeric(K12 %*% solve(a = K22, b = obj_fun_vals - rep(obj_fun_vals[1], times = ncol(K12)))) ## objective function predictions
+  pred_obj_fun <- rep(obj_fun_vals[1], times = nrow(K12)) +
+    as.numeric(K12 %*% solve(a = K22, b = obj_fun_vals - rep(obj_fun_vals[1], times = ncol(K12)))) ## objective function predictions
   obj_fun_vars <- numeric() ## objective function marginal variances
   std_vals <- numeric() ## standardized predictions
   EI <- numeric() ## expected improvement
@@ -401,7 +402,7 @@ knot_prop_ego <- function(laplace_opt,
       while(class(nr_opt) == "try-error")
       {
         pseudo_prop <- laplace_opt$xy[sample.int(n = nrow(laplace_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop), mean = 0, sd = laplace_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop)
         # print(pseudo_xu)
 
@@ -624,7 +625,7 @@ knot_prop_ego_norm <- function(norm_opt,
       while(class(obj_fun_eval) == "try-error")
       {
         pseudo_prop[i,] <- norm_opt$xy[sample.int(n = nrow(norm_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = norm_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop[i,])
 
         ## Create data GP covariance matrices
@@ -882,7 +883,7 @@ knot_prop_ego_norm <- function(norm_opt,
       while(class(obj_fun_eval) == "try-error")
       {
         pseudo_prop <- norm_opt$xy[sample.int(n = nrow(norm_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop), mean = 0, sd = norm_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop)
 
         ## Create data GP covariance matrices
@@ -1108,7 +1109,7 @@ knot_prop_random <- function(laplace_opt,
       while(class(nr_opt) == "try-error")
       {
         pseudo_prop[i,] <- laplace_opt$xy[sample.int(n = nrow(laplace_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = laplace_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop[i,])
         # print(pseudo_xu)
 
@@ -1281,7 +1282,7 @@ knot_prop_random_norm <- function(norm_opt,
       while(class(obj_fun_eval == "try-error"))
       {
         pseudo_prop[i,] <- norm_opt$xy[sample.int(n = nrow(norm_opt$xy), size = 1, replace = FALSE),] +
-          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = norm_opt$cov_par$l / 100)
+          rnorm(n = length(pseudo_prop[i,]), mean = 0, sd = 1e-6)
         pseudo_xu <- rbind(xu, pseudo_prop[i,])
 
         ## Create data GP covariance matrices
