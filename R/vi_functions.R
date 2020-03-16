@@ -655,7 +655,7 @@ norm_grad_ascent_vi <- function(cov_par_start,
       )
     )
     {
-      xu[i,] <- xu[i,] + rnorm(n = ncol(xu),sd = 1e-5)
+      xu[i,] <- xu[i,] + rnorm(n = ncol(xu),sd = 1e-6)
     }
   }
 

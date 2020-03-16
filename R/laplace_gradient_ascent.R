@@ -68,7 +68,7 @@ laplace_grad_ascent <- function(cov_par_start,
     )
     )
     {
-      xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-5)
+      xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-6)
     }
   }
   # xu <- rnorm(n = nrow(xu) * ncol(xu), sd = 1e-6)
@@ -1155,7 +1155,7 @@ norm_grad_ascent <- function(cov_par_start,
       )
     )
       {
-      xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-5)
+      xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-6)
     }
   }
 
@@ -2064,7 +2064,7 @@ norm_grad_ascent_sor <- function(cov_par_start,
     )
     )
     {
-      xu[i,] <- xu[i,] + rnorm(n = ncol(xu),sd = 1e-5)
+      xu[i,] <- xu[i,] + rnorm(n = ncol(xu),sd = 1e-6)
     }
   }
 
