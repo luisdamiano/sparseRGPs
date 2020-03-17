@@ -61,16 +61,16 @@ laplace_grad_ascent <- function(cov_par_start,
 
 
   ## jiggle xu to make sure that knot locations aren't exactly at data locations
-  for(i in 1:nrow(xu))
-  {
-    if(any(
-      apply(X = xy, MARGIN = 1, FUN = function(x,y){isTRUE(all.equal(target = y, current = x))}, y = xu[i,]) == TRUE
-    )
-    )
-    {
-      xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-6)
-    }
-  }
+  # for(i in 1:nrow(xu))
+  # {
+  #   if(any(
+  #     apply(X = xy, MARGIN = 1, FUN = function(x,y){isTRUE(all.equal(target = y, current = x))}, y = xu[i,]) == TRUE
+  #   )
+  #   )
+  #   {
+  #     xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-6)
+  #   }
+  # }
   # xu <- rnorm(n = nrow(xu) * ncol(xu), sd = 1e-6)
 
   ## extract names of optional arguments from opt
@@ -1148,16 +1148,16 @@ norm_grad_ascent <- function(cov_par_start,
   ## ... are argument to be passed to the functions taking derivatives of log(p(y|lambda)) wrt ff
 
   ## jiggle xu to make sure that knot locations aren't exactly at data locations
-  for(i in 1:nrow(xu))
-  {
-    if(any(
-      apply(X = xy, MARGIN = 1, FUN = function(x,y){isTRUE(all.equal(target = y, current = x))}, y = xu[i,]) == TRUE
-      )
-    )
-      {
-      xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-6)
-    }
-  }
+  # for(i in 1:nrow(xu))
+  # {
+  #   if(any(
+  #     apply(X = xy, MARGIN = 1, FUN = function(x,y){isTRUE(all.equal(target = y, current = x))}, y = xu[i,]) == TRUE
+  #     )
+  #   )
+  #     {
+  #     xu[i,] <- xu[i,] + rnorm(n = ncol(xu), sd = 1e-6)
+  #   }
+  # }
 
   ## extract names of optional arguments from opt
   ## extract names of optional arguments from opt

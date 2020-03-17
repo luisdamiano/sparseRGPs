@@ -1,7 +1,7 @@
 Package: sparseRGPs
 Type: Package
 Title: Fit Sparse Gaussian Processes
-Version: 0.0.1
+Version: 0.0.2
 Author: Nathaniel Garton
 Maintainer: The package maintainer <nate.garton13@gmail.com>
 Description: Fit sparse and full Gaussian processes with Type-II 
