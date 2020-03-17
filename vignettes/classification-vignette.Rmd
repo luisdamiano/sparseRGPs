@@ -103,8 +103,8 @@ system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
                                              maxit = maxit,
                                              obj_tol = obj_tol,
                                              epsilon = epsilon,
-                                             delta = delta, cov_diff = FALSE),
-                      verbose = TRUE))
+                                             delta = delta),
+                      verbose = FALSE))
 
 ## look at estimated covariance parameters
 gp_fit_fic$results$cov_par
