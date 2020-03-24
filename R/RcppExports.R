@@ -87,6 +87,8 @@ cov_fun_expC <- function(x1, x2, cov_par) {
 #' @return Covariance matrix at the observed data locations if
 #' x_pred = matrix(), or the covariances between x and x_pred if
 #' x_pred is not an empty matrix.
+#' @useDynLib sparseRGPs
+#' @importFrom Rcpp sourceCpp
 #' @export
 make_cov_matC <- function(x, x_pred, cov_par, cov_fun, delta) {
     .Call('_sparseRGPs_make_cov_matC', PACKAGE = 'sparseRGPs', x, x_pred, cov_par, cov_fun, delta)
@@ -108,6 +110,8 @@ make_cov_matC <- function(x, x_pred, cov_par, cov_fun, delta) {
 #' @return Covariance matrix at the observed data locations if
 #' x_pred = matrix(), or the covariances between x and x_pred if
 #' x_pred is not an empty matrix.
+#' @useDynLib sparseRGPs
+#' @importFrom Rcpp sourceCpp
 #' @export
 make_cov_mat_ardC <- function(x, x_pred, cov_par, cov_fun, delta, lnames) {
     .Call('_sparseRGPs_make_cov_mat_ardC', PACKAGE = 'sparseRGPs', x, x_pred, cov_par, cov_fun, delta, lnames)
