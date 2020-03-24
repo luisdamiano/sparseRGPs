@@ -1097,7 +1097,15 @@ knot_prop_random <- function(laplace_opt,
   #                          cov_par = laplace_opt$cov_par,
   #                          mu = laplace_opt$mu,
   #                          muu = laplace_opt$muu)$pred_var))
-
+  temp1 <- rbind(xu, xy)
+  if(any(duplicated(temp1)))
+  {
+    temp2 <- temp1[-which(duplicated(x = temp1)),]
+    xy_setminus_xu <- temp2[-c(1:nrow(xu)),]
+  }
+  else{
+    xy_setminus_xu <- xy
+  }
 
   pseudo_prop <- matrix(xy_setminus_xu[sample.int(n = nrow(xy_setminus_xu), size = TTmax, replace = FALSE),],
                         ncol = ncol(xy_setminus_xu), nrow = TTmax)
@@ -1256,7 +1264,15 @@ knot_prop_random_norm <- function(norm_opt,
   #                          cov_par = norm_opt$cov_par,
   #                          mu = norm_opt$mu,
   #                          muu = norm_opt$muu)$pred_var))
-
+  temp1 <- rbind(xu, xy)
+  if(any(duplicated(temp1)))
+  {
+    temp2 <- temp1[-which(duplicated(x = temp1)),]
+    xy_setminus_xu <- temp2[-c(1:nrow(xu)),]
+  }
+  else{
+    xy_setminus_xu <- xy
+  }
 
   pseudo_prop <- matrix(xy_setminus_xu[sample.int(n = nrow(xy_setminus_xu), size = TTmax, replace = FALSE),],
                         ncol = ncol(xy_setminus_xu), nrow = TTmax)

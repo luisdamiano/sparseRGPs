@@ -137,7 +137,8 @@ dsqexp_dl <- function(x1, x2, cov_par, transform = FALSE)
       return(log(x))
     }
     return(
-      list("derivative" = (sigma^2 * exp( (-1/(2*l^2)) * sum((x1 - x2)^2) )) * ( (1/(l^3)) * sum((x1 - x2)^2)) * dl_dlt,
+      list("derivative" = (sigma^2 * exp( (-1/(2*l^2)) * sum((x1 - x2)^2) )) *
+             ( (1/(l^3)) * sum((x1 - x2)^2)) * dl_dlt,
            "trans_fun" = trans_fun,
            "trans_par" = inv_trans_fun(l),
            "inverse_trans_fun" = inv_trans_fun)

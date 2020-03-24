@@ -1141,8 +1141,10 @@ dlogp_dcov_par_full <- function(cov_par,
                            cov_fun,
                            dcov_fun_dtheta,
                            xy, y,
-                           mu, transform = TRUE,
-                           delta = 1e-6, ...)
+                           mu,
+                           transform = TRUE,
+                           delta = 1e-6,
+                           ...)
 {
   ## cov_par is a list of the covariance function parameters
   ##    NAMES AND ORDERING MUST MATCH dcov_fun_dtheta
