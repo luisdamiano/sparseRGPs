@@ -4,16 +4,19 @@ using namespace Rcpp;
 
 
 // inverse transformation functions
+//' @export
 // [[Rcpp::export]]
 NumericVector real_to_pos(NumericVector x){
   return exp(x);
 }
 
+//' @export
 // [[Rcpp::export]]
 NumericVector pos_to_real(NumericVector x){
   return log(x);
 }
 
+//' @export
 // [[Rcpp::export]]
 NumericVector real_to_bounded(NumericVector x, NumericVector ub, NumericVector lb){
   return (ub * exp(x) + lb) / (exp(x) + 1);
