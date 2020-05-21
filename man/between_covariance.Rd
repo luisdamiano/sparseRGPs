@@ -5,7 +5,9 @@
 \alias{between_covariance}
 \title{Between source covariance matrix of eight trace copper wire chemical
 concentrations.}
-\format{An 8 x 8 matrix.}
+\format{
+An 8 x 8 matrix.
+}
 \source{
 \url{https://pubs.acs.org/doi/suppl/10.1021/ac5013514/suppl_file/ac5013514_si_002.docx}
 }
