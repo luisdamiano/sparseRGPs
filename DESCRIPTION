@@ -19,12 +19,13 @@ Description: Fit sparse and full Gaussian processes with Type-II
   optimized using the OAT knot selection algorithm proposed in 
   Garton et al. (2020).
 Imports: 
+    abind,
     glmnet,
     ggplot2,
     Matrix,
     mvtnorm,
     Rcpp,
-    Rdpack
+    Rdpack,
 RdMacros: Rdpack 
 License: What license is it under?
 Encoding: UTF-8
