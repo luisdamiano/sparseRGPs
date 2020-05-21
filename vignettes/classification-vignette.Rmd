@@ -147,16 +147,16 @@ ggplot() +
 
 ```{r full, message=FALSE}
 ## fit a full GP
-##  This should take a few minutes (maybe more than 10)
+##  This should take a few minutes (especially if you increase maxit)
 system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
                            cov_fun = "sqexp",
-                           cov_par_start = cov_par_start,
+                           cov_par_start = cov_par_gp,
                            mu = mu,
                            family = "bernoulli",
                            nugget = TRUE,
                            sparse = FALSE,
                            vi = FALSE, opt = list(
-                             maxit = maxit,
+                             maxit = 10,
                              obj_tol = obj_tol,
                              epsilon = epsilon,
                              delta = delta),
