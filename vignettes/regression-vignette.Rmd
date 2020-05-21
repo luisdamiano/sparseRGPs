@@ -80,7 +80,7 @@ obj_tol <- 1e-4
 epsilon <- 1e-4
 
 ## Fit the sparse GP
-## Should take approximately 2-3 minutes
+## Should take around a minute
 system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
                                   xy = xy, # matrix of observed input locations
                       cov_fun = "sqexp", # covariance function
@@ -96,7 +96,7 @@ system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
                       opt = list(maxknot = maxknot, # set algorithmic parameters
                                              TTmax = TTmax, 
                                              TTmin = TTmin,
-                                             maxit = maxit,
+                                             maxit = 10,
                                              obj_tol = obj_tol,
                                              epsilon = epsilon),
                       verbose = FALSE))
