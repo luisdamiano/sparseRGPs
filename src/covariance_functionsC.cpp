@@ -65,6 +65,8 @@ double cov_fun_expC(NumericVector x1, NumericVector x2, List cov_par){
 //' @return Covariance matrix at the observed data locations if
 //' x_pred = matrix(), or the covariances between x and x_pred if
 //' x_pred is not an empty matrix.
+//' @useDynLib sparseRGPs
+//' @importFrom Rcpp sourceCpp
 //' @export
 // [[Rcpp::export]]
 NumericMatrix make_cov_matC(NumericMatrix x,
@@ -182,6 +184,8 @@ NumericMatrix make_cov_matC(NumericMatrix x,
 //' @return Covariance matrix at the observed data locations if
 //' x_pred = matrix(), or the covariances between x and x_pred if
 //' x_pred is not an empty matrix.
+//' @useDynLib sparseRGPs
+//' @importFrom Rcpp sourceCpp
 //' @export
 // [[Rcpp::export]]
 NumericMatrix make_cov_mat_ardC(NumericMatrix x,

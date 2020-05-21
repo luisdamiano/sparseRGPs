@@ -4,18 +4,24 @@ using namespace Rcpp;
 
 
 // inverse transformation functions
+//' @useDynLib sparseRGPs
+//' @importFrom Rcpp sourceCpp
 //' @export
 // [[Rcpp::export]]
 NumericVector real_to_pos(NumericVector x){
   return exp(x);
 }
 
+//' @useDynLib sparseRGPs
+//' @importFrom Rcpp sourceCpp
 //' @export
 // [[Rcpp::export]]
 NumericVector pos_to_real(NumericVector x){
   return log(x);
 }
 
+//' @useDynLib sparseRGPs
+//' @importFrom Rcpp sourceCpp
 //' @export
 // [[Rcpp::export]]
 NumericVector real_to_bounded(NumericVector x, NumericVector ub, NumericVector lb){
