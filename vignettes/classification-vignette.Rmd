@@ -18,10 +18,10 @@ First we will simulate and visualize some data from a 2D classification.
 
 ```{r setup}
 ## uncomment the following line if you used devtools::install_github("nategarton13/sparseRGPs")
-# library(sparseRGPs)
+library(sparseRGPs)
 
 ## comments out the following line if you used devtools::install_github("nategarton13/sparseRGPs")
-devtools::load_all()
+# devtools::load_all()
 library(ggplot2)
 
 ## locations
@@ -61,7 +61,7 @@ cov_par_start <- list("sigma" = 5, "l" = 2, "tau" = 1e-1)
 xu_init <- matrix(data = runif(n = 10, min = 0, max = 10), ncol = 2)
 
 ## maximum number of knots
-maxknot <- 30
+maxknot <- 20
 
 ## number of candidate knot proposals explored
 TTmax <- maxknot

@@ -26,6 +26,7 @@ Imports:
     mvtnorm,
     Rcpp,
     Rdpack,
+    stats
 RdMacros: Rdpack 
 License: What license is it under?
 Encoding: UTF-8
