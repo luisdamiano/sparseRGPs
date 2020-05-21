@@ -217,15 +217,18 @@ optimize_gp <- function(y,
            the number of data points.")
     return()
   }
-  if(xu_opt %in% c("random", "oat") & (
-    opt$TTmin <= 0 ||
-     opt$TTmax <= opt$TTmin ||
-     opt$TTmax >= (length(y) - maxknot)
+  if(!is.null(xu_opt))
+  {
+    if(xu_opt %in% c("random", "oat") & (
+      opt$TTmin <= 0 ||
+      opt$TTmax <= opt$TTmin ||
+      opt$TTmax >= (length(y) - maxknot)
     )
-  ){
-    print("Error: Must adhere to 0 < TTmin < TTmax < N - maxknot. Recommend
+    ){
+      print("Error: Must adhere to 0 < TTmin < TTmax < N - maxknot. Recommend
            setting both TTmax and maxknot < N / 2 or using a full GP.")
-    return()
+      return()
+    }
   }
 
 

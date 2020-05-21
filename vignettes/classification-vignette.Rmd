@@ -25,11 +25,11 @@ devtools::load_all()
 library(ggplot2)
 
 ## locations
-set.seed(1118)
+set.seed(1119)
 xy <- matrix(data = runif(n = 400, min = 0, max = 10), ncol = 2)
 
 ## make covariance matrix
-cov_par_gp <- list("sigma" = 2, "l" = 3, "tau" = 0)
+cov_par_gp <- list("sigma" = 4, "l" = 2, "tau" = 0)
 Sigma <- make_cov_matC(x = xy, x_pred = matrix(),
                        cov_par = cov_par_gp,
                        cov_fun = "sqexp", delta = 1e-6)
@@ -76,7 +76,7 @@ maxit <- 500
 obj_tol <- 1e-4
 
 ## initial step size parameter in ADADELTA
-epsilon <- 1e-3
+epsilon <- 1e-4
 
 ## set a lower bound on the nugget of the latent GP to ensure stability
 ##    As a rough rule of thumb, sigma^2 / (tau^2 + delta) > 1e6 starts to 
