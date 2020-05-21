@@ -27,6 +27,7 @@ Imports:
     Rcpp,
     Rdpack,
     stats
+Depends: R (>= 2.10)
 RdMacros: Rdpack 
 License: What license is it under?
 Encoding: UTF-8
