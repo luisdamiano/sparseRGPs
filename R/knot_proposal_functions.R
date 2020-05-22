@@ -148,8 +148,8 @@ knot_prop_ego <- function(laplace_opt,
   temp1 <- rbind(xu, xy)
   if(any(duplicated(temp1)))
   {
-    temp2 <- temp1[-which(duplicated(x = temp1)),]
-    xy_setminus_xu <- temp2[-c(1:nrow(xu)),]
+    temp2 <- as.matrix(temp1[-which(duplicated(x = temp1)),], ncol = ncol(xy))
+    xy_setminus_xu <- as.matrix(temp2[-c(1:nrow(xu)),], ncol = ncol(xy))
   }
   else{
     xy_setminus_xu <- xy
