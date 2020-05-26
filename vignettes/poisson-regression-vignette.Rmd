@@ -1,0 +1,199 @@
+---
+title: "Classification with sparseRGPs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Classification with sparseRGPs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+First we will simulate and visualize some data from a 2D count data set. 
+
+```{r setup}
+## uncomment the following line if you used devtools::install_github("nategarton13/sparseRGPs")
+library(sparseRGPs)
+
+## comments out the following line if you used devtools::install_github("nategarton13/sparseRGPs")
+# devtools::load_all()
+library(ggplot2)
+
+## locations
+set.seed(1119)
+xy <- matrix(data = runif(n = 400, min = 0, max = 10), ncol = 2)
+
+## make covariance matrix
+cov_par_gp <- list("sigma" = 1, "l" = 1, "tau" = 0)
+Sigma <- make_cov_matC(x = xy, x_pred = matrix(),
+                       cov_par = cov_par_gp,
+                       cov_fun = "sqexp", delta = 1e-6)
+
+## sample the true latent GP
+mu <- rep(1, times = nrow(xy))
+ff <- as.numeric(mvtnorm::rmvnorm(n = 1, mean = mu, sigma = Sigma))
+
+## sample the data
+y <- rpois(n = 200, lambda = exp(ff))
+
+## plot the observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y ))
+```
+
+Let's fit a sparse GP using one-at-a-time knot selection using the 
+log-likelihood as the objective function. 
+
+```{r sparse-fic, message=FALSE}
+###############################################
+## fit the sparse GP model using OAT
+###############################################
+
+## initialize covariance parameters
+cov_par_start <- list("sigma" = 1, "l" = 1, "tau" = 1e-1)
+
+## initial knots
+xu_init <- matrix(data = runif(n = 10, min = 0, max = 10), ncol = 2)
+
+## maximum number of knots
+maxknot <- 30
+
+## number of candidate knot proposals explored
+TTmax <- maxknot
+
+## minimum number of candidate knot proposals to explore
+TTmin <- 5
+
+## maximum number of gradient ascent iterations
+maxit <- 500
+
+## objective function tolerance
+obj_tol <- 1e-4
+
+## initial step size parameter in ADADELTA
+epsilon <- 1e-4
+
+## set a lower bound on the nugget of the latent GP to ensure stability
+##    As a rough rule of thumb, sigma^2 / (tau^2 + delta) > 1e6 starts to 
+##    enter territory where certain matrix inverses may be at risk of failing.
+delta <- 1e-3
+
+## Fit the sparse GP
+## Should take < 10 minutes
+system.time(gp_fit_fic <- optimize_gp(y = y, # response/target values
+                                  xy = xy, # matrix of observed input locations
+                      cov_fun = "sqexp", # covariance function
+                      cov_par_start = cov_par_start, # initial covariance parameter values
+                      mu = rep(log(mean(y)), times = length(y)), # marginal means of the GP at xy
+                      family = "poisson", # conditional distribution of Y|f
+                      nugget = TRUE, # do you want to estimate the noise variance/nugget?
+                      sparse = TRUE, # do you want to estimate a sparse model?
+                      xu_opt = "oat", # method of knot selection
+                      xu = xu_init, # initial knots
+                      muu = rep(mean(y), times = nrow(xu_init)), # marginal GP means at the knots
+                      vi = FALSE, # note variational inference cannot be used with binary data
+                      opt = list(maxknot = maxknot, # set algorithmic parameters
+                                             TTmax = TTmax, 
+                                             TTmin = TTmin,
+                                             maxit = maxit,
+                                             obj_tol = obj_tol,
+                                             epsilon = epsilon,
+                                             delta = delta),
+                      verbose = FALSE, 
+                      a = 1)) # the parameter 'a' can be set to something other 
+                              #   than 1 if counts are aggregated events over regions
+                              #   of the input space, as in a point process.
+                              #   In this case, case 'a' should be the 
+                              #   volume over which events are aggregated. 
+
+## look at estimated covariance parameters
+gp_fit_fic$results$cov_par
+
+## selected knots 
+gp_fit_fic$results$xu
+
+
+## plot the optimized objective function values for each added knot
+plot(1:length(gp_fit_fic$results$obj_fun), gp_fit_fic$results$obj_fun)
+
+## get predictions 
+x_pred <- as.matrix(expand.grid(seq(from = 0, to = 10, by = 0.25), 
+                                seq(from = 0, to = 10, by = 0.25)))
+preds_fic <- predict_gp(mod = gp_fit_fic, 
+                   x_pred = x_pred, 
+                   mu_pred = rep(log(mean(y)), times = nrow(x_pred)), 
+                   full_cov = FALSE, 
+                   vi = FALSE)
+
+## plot the real observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+
+## plot predictions over a fine grid
+##    If 'a' is not equal to 1, then replace 1 here with 'a'
+lambda <- 1 * exp(preds_fic$pred$pred_mean)
+ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
+                          fill = lambda ))
+
+
+## plot the knots
+ggplot() +
+  geom_point(mapping = aes(x = gp_fit_fic$results$xu[,1], y = gp_fit_fic$results$xu[,2])) +
+  geom_point(mapping = aes(x = gp_fit_fic$xu_init[,1], y = gp_fit_fic$xu_init[,2]), 
+             colour = "blue", shape = 2, size = 2)
+
+```
+
+
+```{r full, message=FALSE}
+## fit a full GP
+##  This should take a few minutes (especially if you increase maxit)
+system.time(gp_fit_full <- optimize_gp(y = y, xy = xy,
+                           cov_fun = "sqexp",
+                           cov_par_start = cov_par_gp,
+                           a = 1,
+                           mu = rep(log(mean(y)), times = length(y)),
+                           family = "poisson",
+                           nugget = TRUE,
+                           sparse = FALSE,
+                           vi = FALSE, opt = list(
+                             maxit = 10,
+                             obj_tol = obj_tol,
+                             epsilon = epsilon,
+                             delta = delta),
+                           verbose = FALSE 
+                           )
+            )
+
+gp_fit_full$results$cov_par
+
+## get predictions from a full GP
+preds_full <- predict_gp(mod = gp_fit_full, 
+                        x_pred = x_pred, 
+                        mu_pred = rep(log(mean(y)), times = nrow(x_pred)), 
+                        full_cov = FALSE, 
+                        vi = FALSE)
+
+## plot the real observations
+ggplot() +
+  geom_point(mapping = aes(x = xy[,1], y = xy[,2], colour = y))
+
+## plot the predictions
+#full
+lambda_full <- exp(preds_full$pred$pred_mean)
+full_plot <- ggplot() +
+  geom_tile(mapping = aes(x = x_pred[,1], y = x_pred[,2], 
+                          fill = lambda_full))
+
+full_plot
+
+## plot predictions against each other to see how they match
+plot(x = preds_full$pred$pred_mean, y = preds_fic$pred$pred_mean)
+```
+

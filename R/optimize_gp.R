@@ -458,7 +458,14 @@ optimize_gp <- function(y,
     ##########################
     if(family == "poisson")
     {
-      m <- args$m
+      if(!"a" %in% names(args))
+      {
+        print("Warning: For Poisson regression, additional argument 'm' is
+              required where for the Poisson parameter, lambda(x),
+              lambda(x) = a * exp(f(x)). Setting a = 1.")
+        args$a <- 1
+      }
+      m <- args$a
       if(xu_opt == "fixed")
       {
         dcov_fun_dknot <- NA
@@ -679,6 +686,14 @@ optimize_gp <- function(y,
 
     if(family == "poisson")
     {
+      if(!"a" %in% names(args))
+      {
+        print("Warning: For Poisson regression, additional argument 'm' is
+              required where for the Poisson parameter, lambda(x),
+              lambda(x) = a * exp(f(x)). Setting a = 1.")
+        args$a <- 1
+      }
+      m <- args$a
       results <- laplace_grad_ascent_full(cov_par_start = cov_par_start,
                                           cov_fun = cov_fun,
                                           dcov_fun_dtheta = dcov_fun_dtheta,
